@@ -1,0 +1,17 @@
+model {
+	for (i in 1:N) {
+	  Y[i] ~ dnorm(mu[i], tau2Sp / delta2)
+		mu[i] <- inprod(X[i, 1:p], beta[1:p]) + phi[i]
+		yFit[i] ~ dnorm(mu[i], tau2Sp / delta2) ##Posterior predictive model fit
+	}
+  phi[1:N] ~ dcar_proper(mu_phi[1:N], C[1:L], adj[1:L], num[1:N], M[1:N], tau2Sp, gamma)
+	for (i in 1:p) {
+	  beta[i] ~ dnorm(mu_beta[i], tau2_beta)
+	}
+	  sigma2 <- 1 / tau2
+	  sigma2Sp <- 1 / tau2Sp
+	  tau2Sp <- tau2 / delta2
+    tau2 ~ dgamma(a0_tau2, b0_tau2)
+    delta2 ~ dbeta(a0_delta2, b0_delta2)
+    gamma ~ dbeta(0.5, 0.5)
+}
