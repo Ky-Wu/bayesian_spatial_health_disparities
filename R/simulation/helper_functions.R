@@ -1,6 +1,7 @@
 library(parallel)
 
 ComputeSimSTDDifferences <- function(sim_values, C, ij_list) {
+  # sim indexed by column
   k <- nrow(ij_list)
   n_sim <- ncol(sim_values)
   std_differences <- vapply(seq_len(k), function(pair_indx) {
@@ -139,7 +140,7 @@ SimDecisions <- function(X, beta, sigma2, loss_function, eta, n_sim,
   eps_optim <- optim(median(sim$std_differences), function(e) {
      e_vij <- ComputeSimVij(sim$std_differences, sim$ij_list, epsilon = e)
      loss_function(e_vij, epsilon = e)
-  }, method = "Brent", lower = 0, upper = max(sim$std_differences))
+  }, method = "Brent", lower = 0, upper = max(abs(sim$std_differences)))
   optim_e <- eps_optim$par
   optim_e_vij <- ComputeSimVij(sim$std_differences, sim$ij_list,
                                epsilon = eps_optim$par)
@@ -242,38 +243,63 @@ ComputeClassificationMetrics <- function(predict, truth, e = 0L) {
 }
 
 
-CARStdDiff <- function(sim_phi, alpha, delta2, D, W, X, M0_inv, ij_list,
+BYM_StdDiff <- function(sim_phi, sim_delta2, Q, X, ij_list,
                        mc.cores = 1) {
-  XtX <- t(X) %*% X
-  D_half <- sqrt(D)
-  D_neghalf <- diag(diag(D^(-1/2)))
-  Wstar <- D_neghalf %*% W %*% D_neghalf
-  Wstar_eigen <- eigen(Wstar)
-  P <- Wstar_eigen$vectors
-  lambda <- Wstar_eigen$values
+  # sim indexed by row
+  # assume Q positive definite, apply Simultaneous Diagonalization Theorem
   N <- nrow(X)
-  M0_inv_zero <- all(M0_inv == 0)
-  if (M0_inv_zero) {
-    H <- chol(XtX)
-    H <- solve(t(H), t(X))
-    H <- t(H) %*% H
-  }
-  std_diffs <- mcmapply(function(target_alpha, target_delta2, target_sim_phi_rindx) {
-    target_sim_phi <- matrix(sim_phi[target_sim_phi_rindx,], ncol = 1)
-     if (!M0_inv_zero) {
-       H <- XtX + target_delta2 * M0_inv
-       H <- chol(H)
-       H <- solve(t(H), t(X))
-       H <- t(H) %*% H
-     }
-     B <- diag(N) - H
-     B_star <- D_half %*% t(P) %*% B %*% P %*% D_half / target_delta2
-     A_inv <- diag(1 / (1 - target_alpha * lambda))
-     phi_cov_core <- A_inv + B_star
-     phi_cov_core <- chol(phi_cov_core)
-     phi_cov <- solve(t(phi_cov_core), t(P) %*% D_half)
-     phi_cov <- t(phi_cov) %*% phi_cov
-     std_diffs <- ComputeSimSTDDifferences(target_sim_phi, phi_cov, ij_list)
-  }, alpha, delta2, seq_len(nrow(sim_phi)), mc.cores = mc.cores)
+  XtX <- t(X) %*% X
+  Q_eigen <- eigen(Q)
+  if (any(Q_eigen$values <= 0)) stop("Q not positive definite")
+  Q_neghalf <- Q_eigen$vectors %*% diag(Q_eigen$values^(-0.5)) %*% t(Q_eigen$vectors)
+  H <- chol(XtX)
+  H <- solve(t(H), t(X))
+  H <- t(H) %*% H
+  I_H <- diag(N) - H
+  B <- Q_neghalf %*% I_H %*% Q_neghalf
+  B_eigen <- eigen(B)
+  D <- B_eigen$values
+  O <- B_eigen$vectors
+  U <- Q_neghalf %*% O
+  std_diffs <- mcmapply(function(target_delta2, target_sim_phi_rindx) {
+    target_sim_phi <- t(sim_phi[target_sim_phi_rindx,])
+    phi_cov_core <- diag(1 / (1 + target_delta2 * D))
+    phi_cov <- U %*% phi_cov_core %*% t(U)
+    std_diffs <- ComputeSimSTDDifferences(target_sim_phi, phi_cov, ij_list)
+  }, sim_delta2, seq_len(nrow(sim_phi)), mc.cores = mc.cores)
+  std_diffs
+}
+
+BYM2_StdDiff <- function(sim_phi, sim_rho, Q, X, ij_list,
+                         mc.cores = 1, progress = FALSE) {
+  # sim indexed by row
+  # assume Q positive definite, apply Simultaneous Diagonalization Theorem
+  N <- nrow(X)
+  XtX <- t(X) %*% X
+  Q_eigen <- eigen(Q)
+  if (any(Q_eigen$values <= 0)) stop("Q not positive definite")
+  Q_neghalf <- Q_eigen$vectors %*% diag(Q_eigen$values^(-0.5)) %*% t(Q_eigen$vectors)
+  H <- chol(XtX)
+  H <- solve(t(H), t(X))
+  H <- t(H) %*% H
+  I_H <- diag(N) - H
+  B <- Q_neghalf %*% I_H %*% Q_neghalf
+  B_eigen <- eigen(B)
+  D <- B_eigen$values
+  O <- B_eigen$vectors
+  U <- Q_neghalf %*% O
+  n_sim <- nrow(sim_phi)
+  std_diffs <- mcmapply(function(target_rho, sim_indx) {
+    if (progress & sim_indx %% 1000 == 0) {
+      print(paste0("Computing BYM2 Std. Differences for Sim ",
+                   sim_indx, " / ", n_sim, " (",
+                   round(sim_indx / n_sim * 100, digits = 3), "%)"))
+    }
+    target_sim_phi <- matrix(sim_phi[sim_indx,], ncol =1 )
+    phi_cov_core <- diag(1 / (1 + target_rho / (1 - target_rho) * D),
+                         nrow = length(D), ncol = length(D))
+    phi_cov <- U %*% phi_cov_core %*% t(U)
+    std_diffs <- ComputeSimSTDDifferences(target_sim_phi, phi_cov, ij_list)
+  }, sim_rho, seq_len(nrow(sim_phi)), mc.cores = mc.cores)
   std_diffs
 }
