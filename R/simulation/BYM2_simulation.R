@@ -8,6 +8,7 @@ library(maptools)
 library(magrittr)
 library(nimble)
 library(mcmc)
+library(gridExtra)
 rm(list = ls())
 set.seed(1130)
 
@@ -16,13 +17,24 @@ source(file.path(getwd(), "R", "simulation", "helper_functions.R"))
 # Simualate data Y with CAR model
 source(file.path(getwd(), "R", "simulation", "CAR_data_generation.R"))
 par(mfrow = c(1, 2))
-plot(cbind(Y[,1], st_as_sf(county_sp)))
-plot(cbind(phi, st_as_sf(county_sp)))
+x1 <- cbind("y" = Y[,1], st_as_sf(county_sp))
+x2 <- cbind("phi" = phi, st_as_sf(county_sp))
+p1 <- ggplot() +
+  geom_sf(data = x1, aes(fill = y)) +
+  scale_fill_viridis_c() +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+p2 <- ggplot() +
+  geom_sf(data = x2, aes(fill = phi)) +
+  scale_fill_viridis_c() +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+y_phi_plot <- grid.arrange(p1, p2, nrow = 1)
 # FITTING BYM2 MODEL with CAR SPATIAL COMPONENT VIA NIMBLE
 source(file.path(getwd(), "R", "simulation", "nimble_codes.R"))
 # Hyperparameters
 
-a0_tau2 <- .01
+a0_tau2 <- 2
 b0_tau2 <- .01
 nimble_constants <- list(X = X,
                          N = N,
@@ -45,6 +57,7 @@ nimble_inits <- list(
 model_parameters = c("beta",
                      "sigma2Sp",
                      "sigma2NSp",
+                     "Yfit",
                      "sigma",
                      "rho",
                      "phi")
@@ -73,7 +86,9 @@ hist(samps[, "sigma2Sp"])
 hist(samps[, "sigma2NSp"])
 
 plot(samps[, "rho"], type = "l")
-
+yfit_sim <- samps[, grepl("Yfit", colnames(samps))]
+yfit_pmeans <- colMeans(yfit_sim)
+plot(cbind(Y[,1], yfit_pmeans, st_as_sf(county_sp)))
 credible_intervals <- t(apply(samps, 2, function(x){quantile(x, c(0.50, 0.025, 0.975))}))
 phi_credible_intervals <- credible_intervals[grepl("phi", rownames(credible_intervals)),]
 phi_credible_intervals
@@ -84,7 +99,7 @@ k <- nrow(ij_list)
 n_sim <- ncol(phi_sim)
 system.time({
   phi_diffs <- BYM2_StdDiff(phi_sim, rho_sim, Q_scaled, X, ij_list,
-                            progress = TRUE)
+                            progress = TRUE, mc.cores = 1)
 })
 
 diff_credible_intervals <- t(apply(phi_diffs, 1, function(x) {
@@ -112,7 +127,7 @@ mean(abs(true_phi_diffs) > optim_e)
 optim_e_vij <- ComputeSimVij(t(phi_diffs), ij_list,
                              epsilon = optim_e)
 eta <- .1
-t_seq_length <- 1000
+t_seq_length <- 10000
 t_seq <- seq(0, max(optim_e_vij) - .001, length.out = t_seq_length)
 t_FDR <- vapply(t_seq, function(t) FDR_estimate(optim_e_vij, t), numeric(1))
 t_FNR <- vapply(t_seq, function(t) FNR_estimate(optim_e_vij, t), numeric(1))
@@ -161,7 +176,7 @@ rejection_path[, order_type := fcase(
   order_type == "e4_vij_order", paste0("eps = ", e4),
   order_type == "e5_vij_order", paste0("eps = ", e5)
 )]
-sim_vij_pval_order_graph <- ggplot() +
+sim_vij_order_graph <- ggplot() +
   geom_point(data = rejection_path,
              aes(x = optim_e_vij, y = order, color = true_diff),
              alpha = 0.3, size = 1) +
@@ -172,9 +187,17 @@ sim_vij_pval_order_graph <- ggplot() +
   scale_color_manual(name = "",
                      labels = c("No Difference", "True Difference"),
                      values = c("FALSE" = "red", "TRUE" = "dodgerblue"))
-sim_vij_pval_order_graph
+sim_vij_order_graph
 
 decisions <- logical(nrow(ij_list))
 decisions[optim_e_vij >= optim_t] <- TRUE
 ComputeClassificationMetrics(decisions, true_diff)
+
+# Save ggplot2 plots
+ggsave(file.path(getwd(), "output", "CAR_sim_data.png"),
+       width = 6, height = 4.5, units = "in",
+       y_phi_plot)
+ggsave(file.path(getwd(), "output", "CAR_sim_vij_order.png"),
+       width = 6, height = 4.5, units = "in",
+       sim_vij_order_graph)
 

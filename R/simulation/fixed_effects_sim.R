@@ -3,7 +3,7 @@ library(ggplot2)
 set.seed(1130)
 
 rm(list = ls())
-source(file.path(getwd(), "helper_functions.R"))
+source(file.path(getwd(), "R", "simulation", "helper_functions.R"))
 
 ############# EXAMPLE 1 ###################
 # Simulation parameters
@@ -58,6 +58,18 @@ freq_p <- ComputeFrequentistPValues(X, Y, ij_list_s)
 freq_p_adj <- p.adjust(freq_p, method = "BY")
 freq_decisions <- freq_p_adj <= alpha
 
+# Prior hyperparameters (relatively non-informative priors)
+M0 <- diag(p) * 100
+M0_inv <- chol2inv(chol(M0))
+m0 <- rep(0, p)
+a0 <- .01
+b0 <- .01
+# Compute parameters of posterior
+a1 <- a0 + n/2
+M1 <- chol2inv(chol(M0_inv + t(X) %*% X))
+m1 <- m0 + t(X) %*% Y
+b1 <- b0 + 0.5 * (t(Y) %*% Y + t(m0) %*% M0 %*% m0 - t(m1) %*% M1 %*% m1)
+
 results <- sim_decisions$ij_decisions
 results$freq_decision <- freq_decisions
 eps_differences <- vapply(seq_len(nrow(results)), function(r) {
@@ -66,6 +78,7 @@ eps_differences <- vapply(seq_len(nrow(results)), function(r) {
   sd <- sqrt(M1[i, i] + M1[j, j] - 2 * M1[i, j])
   (abs(beta[i] - beta[j]) / sd) > optim_e
 }, logical(1))
+
 print("frequentist decision metrics:")
 ComputeClassificationMetrics(results$freq_decision, results$difference_truth)
 print("bayesian epsilon method decision metrics (any difference):")
@@ -120,17 +133,7 @@ sim_vij_pval_order_graph
 
 
 # COMPARE FDR AND FNR TO TRUTH
-# Prior hyperparameters (relatively non-informative priors)
-M0 <- diag(p) * 100
-M0_inv <- chol2inv(chol(M0))
-m0 <- rep(0, p)
-a0 <- .01
-b0 <- .01
-# Compute parameters of posterior
-a1 <- a0 + n/2
-M1 <- chol2inv(chol(M0_inv + t(X) %*% X))
-m1 <- m0 + t(X) %*% Y
-b1 <- b0 + 0.5 * (t(Y) %*% Y + t(m0) %*% M0 %*% m0 - t(m1) %*% M1 %*% m1)
+
 mean(sim_decisions$ij_decisions$difference_truth)
 sum(sim_decisions$ij_decisions$difference_truth)
 with(sim_decisions, {
@@ -167,17 +170,17 @@ FDRFNR_eps_graph
 
 
 # SAVE GRAPHS
-ggsave(file.path(getwd(), "sim_eps_loss.png"), eps_loss_graph,
+ggsave(file.path(getwd(), "output", "sim_eps_loss.png"), eps_loss_graph,
        width = 7, height = 5.2, units = "in")
-ggsave(file.path(getwd(), "sim_FDRFNR_graph.png"), FDRFNR_graph,
+ggsave(file.path(getwd(), "output", "sim_FDRFNR_graph.png"), FDRFNR_graph,
        width = 7, height = 5.2, units = "in")
-ggsave(file.path(getwd(), "sim_FDRt_graph.png"), FDRt_graph,
+ggsave(file.path(getwd(), "output", "sim_FDRt_graph.png"), FDRt_graph,
        width = 7, height = 5.2, units = "in")
-ggsave(file.path(getwd(), "sim_FNRt_graph.png"), FNRt_graph,
+ggsave(file.path(getwd(), "output", "sim_FNRt_graph.png"), FNRt_graph,
        width = 7, height = 5.2, units = "in")
-ggsave(file.path(getwd(), "sim_FDRFNR_eps_graph.png"), FDRFNR_eps_graph,
+ggsave(file.path(getwd(), "output", "sim_FDRFNR_eps_graph.png"), FDRFNR_eps_graph,
        width = 7, height = 5.2, units = "in")
-ggsave(file.path(getwd(), "sim_vij_pval_order.png"),
+ggsave(file.path(getwd(), "output", "sim_vij_pval_order.png"),
        width = 6, height = 4.5, units = "in",
        sim_vij_pval_order_graph)
 

@@ -1,13 +1,14 @@
 library(parallel)
 
-ComputeSimSTDDifferences <- function(sim_values, C, ij_list) {
+ComputeSimSTDDifferences <- function(sim_values, C, ij_list, sigma2_sim = 1) {
   # sim indexed by column
   k <- nrow(ij_list)
   n_sim <- ncol(sim_values)
+  sigma_sim <- sqrt(sigma2_sim)
   std_differences <- vapply(seq_len(k), function(pair_indx) {
     i <- ij_list[pair_indx,]$i
     j <- ij_list[pair_indx,]$j
-    sd <- sqrt(C[i, i] + C[j, j] - 2 * C[i, j])
+    sd <- sqrt(C[i, i] + C[j, j] - 2 * C[i, j]) * sigma_sim
     (sim_values[i,] - sim_values[j,]) / sd
   }, numeric(n_sim))
   std_differences
@@ -44,7 +45,7 @@ SimulateBetaDifferences <- function(X, beta, sigma2, n_sim,
     ij_list <- expand.grid(i = seq_len(p), j = seq_len(p))
     ij_list <- ij_list[ij_list$i < ij_list$j,]
   }
-  sim_std_differences <- ComputeSimSTDDifferences(beta_sim, M1, ij_list)
+  sim_std_differences <- ComputeSimSTDDifferences(beta_sim, M1, ij_list, sigma2_sim)
   out <- list(beta_sim = beta_sim,
               Y_sim = Y,
               sigma2_sim = sigma2_sim,
@@ -289,17 +290,26 @@ BYM2_StdDiff <- function(sim_phi, sim_rho, Q, X, ij_list,
   O <- B_eigen$vectors
   U <- Q_neghalf %*% O
   n_sim <- nrow(sim_phi)
+  k <- nrow(ij_list)
+  U2_contrasts <- vapply(seq_len(k), function(pair_indx) {
+    i <- ij_list[pair_indx,]$i
+    j <- ij_list[pair_indx,]$j
+    (U[i,] - U[j,])^2
+  }, numeric(N))
+  print("Computing BYM2 Std. Differences")
+  if (progress) pb <- txtProgressBar(min = 0, max = n_sim, style = 3)
   std_diffs <- mcmapply(function(target_rho, sim_indx) {
-    if (progress & sim_indx %% 1000 == 0) {
-      print(paste0("Computing BYM2 Std. Differences for Sim ",
-                   sim_indx, " / ", n_sim, " (",
-                   round(sim_indx / n_sim * 100, digits = 3), "%)"))
-    }
-    target_sim_phi <- matrix(sim_phi[sim_indx,], ncol =1 )
-    phi_cov_core <- diag(1 / (1 + target_rho / (1 - target_rho) * D),
-                         nrow = length(D), ncol = length(D))
-    phi_cov <- U %*% phi_cov_core %*% t(U)
-    std_diffs <- ComputeSimSTDDifferences(target_sim_phi, phi_cov, ij_list)
+    if (progress) setTxtProgressBar(pb, sim_indx)
+    target_sim_phi <- sim_phi[sim_indx,]
+    std_diffs <- vapply(seq_len(k), function(pair_indx) {
+      i <- ij_list[pair_indx,]$i
+      j <- ij_list[pair_indx,]$j
+      var <- sum(U2_contrasts[,pair_indx] /
+                   (1 + target_rho / (1 - target_rho) * D))
+      (target_sim_phi[i] - target_sim_phi[j]) / sqrt(var)
+    }, numeric(1))
+    std_diffs
   }, sim_rho, seq_len(nrow(sim_phi)), mc.cores = mc.cores)
+  if (progress) close(pb)
   std_diffs
 }

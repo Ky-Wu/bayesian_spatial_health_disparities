@@ -24,6 +24,7 @@ BYM2_code <- nimbleCode({
   for (i in 1:N) {
     for (j in 1:K) {
       Y[i, j] ~ dnorm(mu[i], tau2NSp)
+      Yfit[i, j] ~ dnorm(mu[i], tau2NSp)
     }
     mu[i] <- inprod(X[i, 1:p], beta[1:p]) + phi[i] * sigmaSp
   }
