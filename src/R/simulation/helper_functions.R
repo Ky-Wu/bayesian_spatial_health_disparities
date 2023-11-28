@@ -271,8 +271,7 @@ BYM_StdDiff <- function(sim_phi, sim_delta2, Q, X, ij_list,
   std_diffs
 }
 
-BYM2_StdDiff <- function(sim_phi, sim_rho, Q, X, ij_list,
-                         mc.cores = 1, progress = FALSE) {
+BYM2_StdDiff <- function(sim_phi, sim_rho, Q, X, ij_list) {
   # sim indexed by row
   # assume Q positive definite, apply Simultaneous Diagonalization Theorem
   N <- nrow(X)
@@ -296,20 +295,17 @@ BYM2_StdDiff <- function(sim_phi, sim_rho, Q, X, ij_list,
     j <- ij_list[pair_indx,]$j
     (U[i,] - U[j,])^2
   }, numeric(N))
-  print("Computing BYM2 Std. Differences")
-  if (progress) pb <- txtProgressBar(min = 0, max = n_sim, style = 3)
-  std_diffs <- mcmapply(function(target_rho, sim_indx) {
-    if (progress) setTxtProgressBar(pb, sim_indx)
-    target_sim_phi <- sim_phi[sim_indx,]
-    std_diffs <- vapply(seq_len(k), function(pair_indx) {
-      i <- ij_list[pair_indx,]$i
-      j <- ij_list[pair_indx,]$j
-      var <- sum(U2_contrasts[,pair_indx] /
-                   (1 + target_rho / (1 - target_rho) * D))
-      (target_sim_phi[i] - target_sim_phi[j]) / sqrt(var)
-    }, numeric(1))
-    std_diffs
-  }, sim_rho, seq_len(nrow(sim_phi)), mc.cores = mc.cores)
-  if (progress) close(pb)
+  prec_core <- vapply(sim_rho, function(target_rho) {
+    1 / (1 + target_rho / (1 - target_rho) * D)
+  }, numeric(N))
+  sds <- sqrt(t(prec_core) %*% U2_contrasts)
+  diffs <- vapply(seq_len(k), function(pair_indx) {
+    i <- ij_list[pair_indx,]$i
+    j <- ij_list[pair_indx,]$j
+    sim_phi[,i] - sim_phi[,j]
+  }, numeric(n_sim))
+  std_diffs <- diffs / sds
   std_diffs
 }
+
+

@@ -3,7 +3,7 @@ library(ggplot2)
 set.seed(1130)
 
 rm(list = ls())
-source(file.path(getwd(), "R", "simulation", "helper_functions.R"))
+source(file.path(getwd(), "src", "R", "simulation", "helper_functions.R"))
 
 ############# EXAMPLE 1 ###################
 # Simulation parameters
