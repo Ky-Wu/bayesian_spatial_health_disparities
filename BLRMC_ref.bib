@@ -113,6 +113,23 @@
   file = {/Users/kylel/Zotero/storage/6ALW2M79/Greenland - 2006 - Bayesian perspectives for epidemiological research.pdf;/Users/kylel/Zotero/storage/UTXQERB4/735529.html}
 }
 
+@article{liBayesianModelsDetecting2015a,
+  title = {Bayesian {{Models}} for {{Detecting Difference Boundaries}} in {{Areal Data}}},
+  author = {Li, Pei and Banerjee, Sudipto and Hanson, Timothy A. and McBean, Alexander M.},
+  year = {2015},
+  journal = {Statistica Sinica},
+  volume = {25},
+  number = {1},
+  eprint = {24311022},
+  eprinttype = {jstor},
+  pages = {385--402},
+  publisher = {{Institute of Statistical Science, Academia Sinica}},
+  issn = {1017-0405},
+  urldate = {2023-12-07},
+  abstract = {With increasing accessibility to Geographical Information Systems (GIS) software, researchers and administrators in public health routinely encounter areal data compiled as aggregates over areal regions, such as counts or rates across counties in a state. Spatial models for areal data attempt to deliver smoothed maps by accounting for high variability in certain regions. Subsequently, inferential interest is focused upon formally identifying the "difference edges" or " difference boundaries" on the map that delineate adjacent regions with vastly disparate outcomes, perhaps caused by latent risk factors. We propose nonparametric Bayesian models for areal data that can formally identify boundaries between disparate neighbors. After elucidating these models and their estimation methods, we resort to simulation experiments to assess their effectiveness, and subsequently analyze Pneumonia and Influenza hospitalization maps from the SEER-Medicare program in Minnesota, where we detect and report highly disparate neighboring counties.},
+  file = {/Users/kylel/Zotero/storage/U39IRNYV/Li et al. - 2015 - Bayesian Models for Detecting Difference Boundarie.pdf}
+}
+
 @article{mitchellBayesianVariableSelection1988,
   title = {Bayesian {{Variable Selection}} in {{Linear Regression}}},
   author = {Mitchell, T. J. and Beauchamp, J. J.},
@@ -158,6 +175,13 @@
   file = {/Users/kylel/Zotero/storage/PP388YKJ/Müller et al. - 2004 - Optimal Sample Size for Multiple Testing.pdf}
 }
 
+@misc{PursedLipsMeme,
+  title = {Pursed Lips Meme - {{Google Search}}},
+  urldate = {2023-12-23},
+  howpublished = {https://www.google.com/search?sca\_esv=593172625\&rlz=1C5CHFA\_enUS1072US1072\&sxsrf=AM9HkKkUHd8-gvi44uhM1jdMebzuC6HoqA:1703292119357\&q=pursed+lips+meme\&tbm=isch\&source=lnms\&sa=X\&ved=2ahUKEwiWjeTNqaSDAxXWM0QIHSVFBJ8Q0pQJegQICxAB\&cshid=1703292130034223\&biw=1920\&bih=993\&dpr=1\#imgrc=zcOIgo7ENn78-M},
+  file = {/Users/kylel/Zotero/storage/RBG9AY2G/search.html}
+}
+
 @article{rieblerIntuitiveBayesianSpatial2016,
   title = {An Intuitive {{Bayesian}} Spatial Model for Disease Mapping That Accounts for Scaling},
   author = {Riebler, Andrea and S{\o}rbye, Sigrunn H and Simpson, Daniel and Rue, H{\aa}vard},
@@ -174,6 +198,12 @@
   abstract = {In recent years, disease mapping studies have become a routine application within geographical epidemiology and are typically analysed within a Bayesian hierarchical model formulation. A variety of model formulations for the latent level have been proposed but all come with inherent issues. In the classical BYM (Besag, York and Molli{\'e}) model, the spatially structured component cannot be seen independently from the unstructured component. This makes prior definitions for the hyperparameters of the two random effects challenging. There are alternative model formulations that address this confounding; however, the issue on how to choose interpretable hyperpriors is still unsolved. Here, we discuss a recently proposed parameterisation of the BYM model that leads to improved parameter control as the hyperparameters can be seen independently from each other. Furthermore, the need for a scaled spatial component is addressed, which facilitates assignment of interpretable hyperpriors and make these transferable between spatial applications with different graph structures. The hyperparameters themselves are used to define flexible extensions of simple base models. Consequently, penalised complexity priors for these parameters can be derived based on the information-theoretic distance from the flexible model to the base model, giving priors with clear interpretation. We provide implementation details for the new model formulation which preserve sparsity properties, and we investigate systematically the model performance and compare it to existing parameterisations. Through a simulation study, we show that the new model performs well, both showing good learning abilities and good shrinkage behaviour. In terms of model choice criteria, the proposed model performs at least equally well as existing parameterisations, but only the new formulation offers parameters that are interpretable and hyperpriors that have a clear meaning.},
   langid = {english},
   file = {/Users/kylel/Zotero/storage/ARLZSJWL/Riebler et al. - 2016 - An intuitive Bayesian spatial model for disease ma.pdf}
+}
+
+@misc{RStanInterfaceStan2023,
+  title = {{{RStan}}: The {{R}} Interface to {{Stan}}},
+  year = {2023},
+  howpublished = {Stan Development Team}
 }
 
 @article{scottExplorationAspectsBayesian2006,
@@ -226,7 +256,6 @@
   abstract = {In this paper, we introduce a new concept for constructing prior distributions. We exploit the natural nested structure inherent to many model components, which defines the model component to be a flexible extension of a base model. Proper priors are defined to penalise the complexity induced by deviating from the simpler base model and are formulated after the input of a user-defined scaling parameter for that model component, both in the univariate and the multivariate case. These priors are invariant to reparameterisations, have a natural connection to Jeffreys' priors, are designed to support Occam's razor and seem to have excellent robustness properties, all which are highly desirable and allow us to use this approach to define default prior distributions. Through examples and theoretical results, we demonstrate the appropriateness of this approach and how it can be applied in various situations.},
   archiveprefix = {arxiv},
   keywords = {Statistics - Methodology},
-  note = {Comment: Major revision of previous version. Includes a beefed up literature review and new desiderata for hierarchical priors. Removes (for space) the Cox proportional hazard model and the section on hyperparameters for Gaussian random fields},
   file = {/Users/kylel/Zotero/storage/F97XGW8A/Simpson et al. - 2015 - Penalising model component complexity A principle.pdf;/Users/kylel/Zotero/storage/ZAI55Z7A/1403.html}
 }
 
@@ -263,21 +292,17 @@
   abstract = {This paper explores the intrinsic connections between the Bayesian false discovery rate (FDR) control procedures and their counterpart of frequentist procedures. We attempt to offer a unified view of FDR control within and beyond the setting of testing exchangeable hypotheses. Under the standard two-groups model and the Oracle condition, we show that the Bayesian and the frequentist methods can achieve asymptotically equivalent FDR control at arbitrary levels. Built on this result, we further illustrate that rigorous post-fitting model diagnosis is necessary and effective to ensure robust FDR controls for parametric Bayesian approaches. Additionally, we show that the Bayesian FDR control approaches are coherent and naturally extended to the setting beyond testing exchangeable hypotheses. Particularly, we illustrate that \$p\$-values are no longer the natural statistical instruments for optimal frequentist FDR control in testing non-exchangeable hypotheses. Finally, we illustrate that simple numerical recipes motivated by our theoretical results can be effective in examining some key model assumptions commonly assumed in both Bayesian and frequentist procedures (e.g., zero assumption).},
   archiveprefix = {arxiv},
   keywords = {Statistics - Methodology},
-  note = {Comment: 6 figures, 3 tables},
   file = {/Users/kylel/Zotero/storage/W3FDHU4T/Wen - 2018 - A Unified View of False Discovery Rate Control Re.pdf;/Users/kylel/Zotero/storage/3V4LSH4R/1803.html}
 }
 
-@article{zhangExactBayesianGeostatistics2023,
+@article{zhangExactBayesianGeostatistics2023a,
   title = {Exact {{Bayesian Geostatistics Using Predictive Stacking}}},
   author = {Zhang, Lu and Tang, Wenpin and Banerjee, Sudipto},
   year = {2023},
   publisher = {{arXiv}},
   doi = {10.48550/ARXIV.2304.12414},
-  urldate = {2023-11-08},
+  urldate = {2023-12-07},
   abstract = {We develop Bayesian predictive stacking for geostatistical models. Our approach builds an augmented Bayesian linear regression framework that subsumes the realizations of the spatial random field and delivers exact analytically tractable posterior inference conditional upon certain spatial process parameters. We subsequently combine such inference by stacking these individual models across the range of values of the hyper-parameters. We devise stacking of means and posterior densities in a manner that is computationally efficient without the need of iterative algorithms such as Markov chain Monte Carlo (MCMC) and can exploit the benefits of parallel computations. We offer novel theoretical insights into the resulting inference within an infill asymptotic paradigm and through empirical results showing that stacked inference is comparable to full sampling-based Bayesian inference at a significantly lower computational cost.},
   copyright = {arXiv.org perpetual, non-exclusive license},
-  keywords = {Computation (stat.CO),FOS: Computer and information sciences,FOS: Mathematics,Methodology (stat.ME),Statistics Theory (math.ST)},
-  note = {\subsection{Other}
-
-35 pages, 12 figures}
+  keywords = {Computation (stat.CO),FOS: Computer and information sciences,FOS: Mathematics,Methodology (stat.ME),Statistics Theory (math.ST)}
 }

@@ -10,7 +10,9 @@ library(nimble)
 rm(list = ls())
 set.seed(1130)
 
-source(file.path(getwd(), "R", "simulation", "helper_functions.R"))
+source(file.path(getwd(), "src", "R", "simulation", "simulation_helper.R"))
+source(file.path(getwd(), "src", "R", "eps_loss_FDR.R"))
+source(file.path(getwd(), "src", "R", "vij_computation.R"))
 
 # Import CA counties
 county_poly <- maps::map("county","california", fill=TRUE, plot=FALSE)

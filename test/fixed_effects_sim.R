@@ -3,7 +3,9 @@ library(ggplot2)
 set.seed(1130)
 
 rm(list = ls())
-source(file.path(getwd(), "src", "R", "simulation", "helper_functions.R"))
+source(file.path(getwd(), "src", "R", "simulation", "simulation_helper.R"))
+source(file.path(getwd(), "src", "R", "eps_loss_FDR.R"))
+source(file.path(getwd(), "src", "R", "vij_computation.R"))
 
 ############# EXAMPLE 1 ###################
 # Simulation parameters
@@ -129,9 +131,6 @@ sim_vij_pval_order_graph <- ggplot() +
                      values = c("FALSE" = "red", "TRUE" = "dodgerblue"))
 sim_vij_pval_order_graph
 
-
-
-
 # COMPARE FDR AND FNR TO TRUTH
 
 mean(sim_decisions$ij_decisions$difference_truth)
@@ -168,31 +167,24 @@ FDRt_graph
 FNRt_graph
 FDRFNR_eps_graph
 
-
 # SAVE GRAPHS
-ggsave(file.path(getwd(), "output", "sim_eps_loss.png"), eps_loss_graph,
+ggsave(file.path(getwd(), "output", "FE_sim", "eps_loss.png"), eps_loss_graph,
        width = 7, height = 5.2, units = "in")
-ggsave(file.path(getwd(), "output", "sim_FDRFNR_graph.png"), FDRFNR_graph,
+ggsave(file.path(getwd(), "output", "FE_sim", "FDRFNR_graph.png"), FDRFNR_graph,
        width = 7, height = 5.2, units = "in")
-ggsave(file.path(getwd(), "output", "sim_FDRt_graph.png"), FDRt_graph,
+ggsave(file.path(getwd(), "output", "FE_sim", "FDRt_graph.png"), FDRt_graph,
        width = 7, height = 5.2, units = "in")
-ggsave(file.path(getwd(), "output", "sim_FNRt_graph.png"), FNRt_graph,
+ggsave(file.path(getwd(), "output", "FE_sim", "FNRt_graph.png"), FNRt_graph,
        width = 7, height = 5.2, units = "in")
-ggsave(file.path(getwd(), "output", "sim_FDRFNR_eps_graph.png"), FDRFNR_eps_graph,
+ggsave(file.path(getwd(), "output", "FE_sim", "FDRFNR_eps_graph.png"), FDRFNR_eps_graph,
        width = 7, height = 5.2, units = "in")
-ggsave(file.path(getwd(), "output", "sim_vij_pval_order.png"),
+ggsave(file.path(getwd(), "output", "FE_sim", "vij_pval_order.png"),
        width = 6, height = 4.5, units = "in",
        sim_vij_pval_order_graph)
 
-
-# Example 2
-beta <- c(rep(0, 9), 0.2, 0.2, 0.2, 0.6)
-print(beta)
-p <- length(beta)
-X <- matrix(runif(n * p, -3, 3), n, p)
-sim_decisions <- SimDecisions(X, beta, sigma2, loss, eta, n_sim,
-                              t_seq_length = 300)
-sim_decisions$ij_decisions
-GGPlotEpsLoss(sim_decisions, loss)
-GGPlotFDRFNR(sim_decisions)
-
+dev.off()
+par(mfrow = c(1, 1))
+x <- roc(sim_decisions$ij_decisions$difference_truth, bayes_vij)
+png(filename = file.path(getwd(), "output", "FE_sim", "roc.png"))
+plot(x, legacy.axes = T, print.auc = TRUE, col = "dodgerblue", add = FALSE)
+dev.off()

@@ -25,7 +25,7 @@ Q_scaled <- Q * scaling_factor
 Q_scaled_cholR <- Q_cholR * sqrt(scaling_factor)
 Sigma_scaled <- Sigma / scaling_factor
 N <- nrow(W)
-# p = proportion of overall variance attributed to spatial variance
+# rho = proportion of overall variance attributed to spatial variance
 # sigma2 = overall variance
 sigma2 <- 4
 rho <- 0.93
