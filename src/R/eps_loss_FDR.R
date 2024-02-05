@@ -17,6 +17,14 @@ GeneralLoss <- function(V, epsilon, g, h) {
   loss
 }
 
+Entropy <- function(V) {
+  vapply(seq_len(ncol(V)), function(i) {
+    v <- V[, i]
+    entropy <- ifelse(v == 0 | v == 1, 0.0, -v * log(v) - (1 - v) * log(1 - v))
+    sum(entropy)
+  }, numeric(1))
+}
+
 FDR_estimate <- function(v, t, e = 0.5) {
   v_s <- v[v > t]
   sum(1 - v_s) / (length(v_s) + e)

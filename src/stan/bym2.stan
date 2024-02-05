@@ -31,7 +31,7 @@ model {
   sigma2 ~ inv_gamma(a0_sigma, b0_sigma);
   rho ~ beta(0.5, 0.5);
 }
-//generated quantities {
-  //real logit_rho = log(rho / (1.0 - rho));
-  //real YFit[N] = normal_rng(X * beta + phi * sigmaSp, sigmaNSp);
-//}
+generated quantities {
+  real logit_rho = log(rho / (1.0 - rho));
+  real YFit[N] = normal_rng(X * beta + phi * sigmaSp, sigmaNSp);
+}

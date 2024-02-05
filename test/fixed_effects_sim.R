@@ -1,5 +1,6 @@
 library(data.table)
 library(ggplot2)
+library(pROC)
 set.seed(1130)
 
 rm(list = ls())
@@ -184,7 +185,7 @@ ggsave(file.path(getwd(), "output", "FE_sim", "vij_pval_order.png"),
 
 dev.off()
 par(mfrow = c(1, 1))
-x <- roc(sim_decisions$ij_decisions$difference_truth, bayes_vij)
+x <- pROC::roc(sim_decisions$ij_decisions$difference_truth, bayes_vij)
 png(filename = file.path(getwd(), "output", "FE_sim", "roc.png"))
 plot(x, legacy.axes = T, print.auc = TRUE, col = "dodgerblue", add = FALSE)
 dev.off()
