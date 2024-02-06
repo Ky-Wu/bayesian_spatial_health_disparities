@@ -40,7 +40,7 @@ N <- nrow(W)
 # rho = proportion of overall variance attributed to spatial variance
 # sigma2 = overall variance
 sigma2 <- 4
-rho <- 0.65
+rho <- 0.56
 sigma2Sp <- rho * sigma2
 sigma2NSp <- (1 - rho) * sigma2
 # Generate random effects

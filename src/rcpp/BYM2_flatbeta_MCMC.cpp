@@ -19,6 +19,15 @@ public:
   double astar_sigma;
   double bstar_sigma;
   double lambda_rho;
+  arma::vec vec_N;
+  arma::vec Lambda;
+  arma::mat P;
+  arma::mat C;
+  arma::mat U;
+  arma::vec D;
+  arma::mat matrix_pp;
+  arma::vec vec_p;
+  arma::vec vec2_p;
   BYM2FlatBetaMCMC(arma::mat X_,
                    arma::vec y_,
                    arma::mat Q_,
@@ -35,7 +44,7 @@ public:
     beta_ols = X.t() * y;
     beta_ols = solve(trimatl(XtX_R.t()), beta_ols);
     beta_ols = solve(trimatu(XtX_R), beta_ols);
-    // simultaneous diagonalization of Q and I - H
+    // Q = P Lambda P'
     eig_sym(Lambda, P, Q);
     // store intermediate Q^{-1/2} temporarily in U
     U = P * diagmat(pow(Lambda, -0.5)) * P.t();
@@ -43,17 +52,18 @@ public:
     matrix_pN = solve(trimatl(XtX_R.t()), X.t());
     matrix_NN = -1 * matrix_pN.t() * matrix_pN;
     matrix_NN.diag() += 1;
-    // Q^{-1/2} * (I - H) * Q^{-1/2}
+    // simultaneous diagonalization of Q and I - H
+    // Q^0.5 * (I - H) * Q^0.5
     matrix_NN = U * matrix_NN * U;
-    eig_sym(D, P, matrix_NN);
-    // U = Q^{-1/2}P
-    U = U * P;
+    eig_sym(D, C, matrix_NN);
+    U = U * C;
     UtX = U.t() * X;
     // e := y - X * beta_ols
     // r := y - X * beta - gamma
     e = y - X * beta_ols;
     Ute = U.t() * e;
     vec_p = zeros(p);
+    vec2_p = zeros(p);
     vec_N = zeros(N);
     matrix_pp = zeros(p, p);
     matrix_pN = zeros(p, N);
@@ -101,31 +111,101 @@ public:
     return out;
   }
 
-  void BurnMCMCSample(int n_iter) {
+  void burnMCMCSample(int n_iter) {
     for (int i = 0; i < n_iter; i++) {
       updateBeta();
       updateGamma();
-      updateRho();
-      updateSigma2();
+      updateSigma2(true);
+      updateRho(false);
     }
   }
+
+  double logPostd(bool update_rtr = true) {
+    if (update_rtr) {
+      vec_N = y - X * beta - gamma;
+      rtr = dot(vec_N, vec_N);
+    }
+    double out = (double) -N / 2.0 * log(2.0 * datum::pi * sigma2 * (1 - rho));
+    out -= rtr / (2 * sigma2 * (1 - rho));
+    // IG prior on sigma2
+    out -= (a_sigma + 1) * log(sigma2) + 1 / (b_sigma * sigma2);
+    return out;
+  }
+
+  DataFrame rhoChainAnalysis(int n_chains,
+                     int n_burnin,
+                     int n_samples) {
+    int total_samps = n_chains * n_samples;
+    int indx;
+    double init_rho;
+    arma::vec sigma2_sim = zeros(total_samps);
+    arma::vec rho_sim = zeros(total_samps);
+    arma::vec log_postd = zeros(total_samps);
+    arma::vec chain_indx = zeros(total_samps);
+    arma::vec init_rhos = zeros(total_samps);
+    arma::vec rtr_values = zeros(total_samps);
+    for (int i = 0; i < n_chains; i++) {
+      initOLS();
+      init_rho = randu(distr_param(0, 1));
+      rho = init_rho;
+      burnMCMCSample(n_burnin);
+      for (int j = 0; j < n_samples; j++) {
+        indx = i * n_samples + j;
+        updateBeta();
+        updateGamma();
+        updateSigma2(true);
+        updateRho(false);
+        sigma2_sim(indx) = sigma2;
+        rho_sim(indx) = rho;
+        log_postd(indx) = logPostd(false);
+        chain_indx(indx) = i;
+        init_rhos(indx) = init_rho;
+        rtr_values(indx) = rtr;
+      }
+    }
+    DataFrame out = DataFrame::create(_["chain"] = chain_indx,
+                                      _["init_rho"] = init_rhos,
+                                      _["sigma2"] = sigma2_sim,
+                                      _["rho"] = rho_sim,
+                                      _["log_postd"] = log_postd,
+                                      _["rtr"] = rtr_values);
+    return out;
+  }
+
   void updateBeta() {
-    // B = (1 - rho) / rho * Q + (I - H) = U[(1 - rho) / rho I_n + D]U'
-    // vec_N = 1 / (1 - rho) B^(-1) e
-    vec_N = diagmat(1.0 / ((1.0 - rho) / rho + D)) * Ute;
-    vec_N = U * vec_N;
-    // vec_N = beta_ols - (X'X)^{-1}X'[gamma - (1 - rho)^{-1} B^(-1) e]
-    vec_N = gamma - vec_N;
-    vec_N = y - vec_N;
+    // E(beta | y, phi, sigma2, rho) = beta_ols - (X'X)^(-1)X'gamma
+    // = (X'X)^(-1)X'(y - gamma)
+    vec_N = y - gamma;
+    // use beta temporarily
     beta = X.t() * vec_N;
-    beta = solve(trimatl(XtX_R.t()), beta);
+    vec_p = solve(trimatl(XtX_R.t()), beta);
     // var(beta | y, phi, sigma2, rho) = sigma2 * (1 - rho) (X'X)^{-1}
-    beta += randn(p, distr_param(0.0, pow(sigma2 * (1.0 - rho), 0.5)));
-    beta = solve(trimatu(XtX_R), beta);
+    vec_p += randn(p, distr_param(0.0, pow(sigma2 * (1.0 - rho), 0.5)));
+    beta = solve(trimatu(XtX_R), vec_p);
   }
 
   void updateGamma() {
-    // var(gamma | y, beta, sigma2, rho) =
+    // B = (1 - rho) / rho * Q + (I - H) = U[(1 - rho) / rho I_n + D]U'
+    // E(gamma | y, beta, sigma2, rho) =
+    // B^{-1}[y - XC^{-1}(X'Xbeta + X'B^(-1)y)]
+    // C = X'X + X'B^(-1)X
+    // vec_N = B^(-1)y
+    vec_N = U.t() * y;
+    vec_N = (1 / ((1 - rho) / rho + D)) % vec_N;
+    vec_N = U * vec_N;
+    vec_p = X.t() * vec_N + XtX * beta;
+    // matrix_pp = chol(C) = chol(X'X + X'B^{-1}X)
+    matrix_pN = UtX.t() * diagmat(pow((1 - rho) / rho + D, -0.5));
+    matrix_pp =  matrix_pN * matrix_pN.t();
+    matrix_pp += XtX;
+    matrix_pp = chol(matrix_pp, "upper");
+    vec2_p = solve(trimatl(matrix_pp.t()), vec_p);
+    vec_p = solve(trimatu(matrix_pp), vec2_p);
+    gamma = y - X * vec_p;
+    gamma = U.t() * gamma;
+    gamma = (1.0 / ((1.0 - rho) / rho + D)) % gamma;
+    gamma = U * gamma;
+    // var(gamma | y, beta, sigma2, rho) = sigma2 * [1 / (1 - rho) * I + Q / rho]
     // sigma2 * P[1 / (1 - rho) * I + 1 / rho * Lambda]^{-1}P^T
     vec_N = Lambda / rho;
     vec_N += 1.0 / (1.0 - rho);
@@ -133,22 +213,7 @@ public:
     vec_N = vec_N % randn(N, distr_param(0, 1));
     vec_N = P * vec_N;
     vec_N *= pow(sigma2, 0.5);
-    // E(gamma | y, beta, sigma2, rho) =
-    // (1 - rho)^{-1}B^{-1}[e - XC^{-1}X'X(beta - beta_ols)]
-    vec_p = beta - beta_ols;
-    vec_p = XtX * vec_p;
-    // matrix_pp = chol(C) = chol(X'X + (1 - rho)^{-1}X'B^{-1}X)
-    matrix_pN = UtX.t() * diagmat(1 / ((1 - rho) / rho + D));
-    matrix_pp =  matrix_pN * matrix_pN.t();
-    matrix_pp += XtX;
-    matrix_pp = chol(matrix_pp, "upper");
-    vec_p = solve(trimatl(matrix_pp.t()), vec_p);
-    vec_p = solve(trimatu(matrix_pp), vec_p);
-    gamma = X * vec_p;
-    gamma = e - gamma;
-    gamma = U.t() * gamma;
-    gamma = (1.0 / ((1.0 - rho) / rho + D)) % gamma;
-    gamma = U * gamma + vec_N;
+    gamma = gamma + vec_N;
   }
 
   void updateSigma2(bool update_rtr = true) {
@@ -165,11 +230,11 @@ public:
       vec_N = y - X * beta - gamma;
       rtr = dot(vec_N, vec_N);
     }
-    double theta = randg(distr_param(1, 1));
+    double theta = randg(distr_param(1.0, 1.0 / lambda_rho));
     double rho_star = exp(-1.0 * theta);
     double MH = (double) N / 2.0 * log((1.0 - rho) / (1.0 - rho_star));
     MH += rtr / (2.0 * sigma2) * (1.0 / (1.0 - rho) - 1.0 / (1.0 - rho_star));
-    MH += (lambda_rho - 1) * log(rho_star / rho);
+    MH += (lambda_rho - 1) * log(rho / rho_star);
     if (log(randu(distr_param(0, 1))) <= MH) {
       rho = rho_star;
     }
@@ -184,14 +249,7 @@ private:
   arma::mat XtX;
   arma::mat XtX_R;
   arma::vec beta_ols;
-  arma::vec Lambda;
-  arma::mat P;
-  arma::mat U;
   arma::mat UtX;
-  arma::vec D;
-  arma::vec vec_p;
-  arma::vec vec_N;
-  arma::mat matrix_pp;
   arma::mat matrix_pN;
   arma::mat matrix_NN;
 };
@@ -211,13 +269,23 @@ RCPP_MODULE(BYM2FlatBetaMCMC_module) {
   .field("lambda_rho", &BYM2FlatBetaMCMC::lambda_rho)
   .field("astar_sigma", &BYM2FlatBetaMCMC::astar_sigma)
   .field("bstar_sigma", &BYM2FlatBetaMCMC::bstar_sigma)
+  .field("vec_N", &BYM2FlatBetaMCMC::vec_N)
+  .field("Lambda", &BYM2FlatBetaMCMC::Lambda)
+  .field("P", &BYM2FlatBetaMCMC::P)
+  .field("matrix_pp", &BYM2FlatBetaMCMC::matrix_pp)
+  .field("vec_p", &BYM2FlatBetaMCMC::vec_p)
+  .field("vec2_p", &BYM2FlatBetaMCMC::vec2_p)
+  .field("U", &BYM2FlatBetaMCMC::U)
+  .field("D", &BYM2FlatBetaMCMC::D)
 
   .method("initOLS", &BYM2FlatBetaMCMC::initOLS)
   .method("MCMCSample", &BYM2FlatBetaMCMC::MCMCSample)
-  .method("BurnMCMCSample", &BYM2FlatBetaMCMC::BurnMCMCSample)
+  .method("burnMCMCSample", &BYM2FlatBetaMCMC::burnMCMCSample)
   .method("updateBeta", &BYM2FlatBetaMCMC::updateBeta)
   .method("updateGamma", &BYM2FlatBetaMCMC::updateGamma)
   .method("updateRho", &BYM2FlatBetaMCMC::updateRho)
   .method("updateSigma2", &BYM2FlatBetaMCMC::updateSigma2)
+  .method("logPostd", &BYM2FlatBetaMCMC::logPostd)
+  .method("rhoChainAnalysis", &BYM2FlatBetaMCMC::rhoChainAnalysis)
   ;
 }

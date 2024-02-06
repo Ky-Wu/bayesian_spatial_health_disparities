@@ -31,13 +31,13 @@ BYM2Sampler$SetPriors(M_0inv, m_0, a_0, b_0)
 
 n_sim <- 10000
 system.time({
-  samps <- BYM2Sampler$ExactSample(n_sim)
+  exact_samps <- BYM2Sampler$ExactSample(n_sim)
 })
 
-beta_sim <- samps$beta
-gamma_sim <- samps$gamma
-sigma2_sim <- samps$sigma2
-YFit_sim <- samps$YFit
+beta_sim <- exact_samps$beta
+gamma_sim <- exact_samps$gamma
+sigma2_sim <- exact_samps$sigma2
+YFit_sim <- exact_samps$YFit
 denom <- sqrt(sigma2_sim * rho)
 phi_sim <- apply(gamma_sim, MARGIN = 2, function(x) x / denom)
 rm(denom)
