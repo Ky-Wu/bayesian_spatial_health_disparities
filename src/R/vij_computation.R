@@ -23,14 +23,12 @@ ComputeSimScaledDiffs <- function(sim_values, ij_list) {
   apply(diffs, MARGIN = 2, function(x) abs(x) / sd(x))
 }
 
-ComputeSimVij <- function(d, ij_list, epsilon) {
-  # simulations indexed by row
-  k <- nrow(ij_list)
+ComputeSimVij <- function(d, epsilon) {
+  # simulations indexed by row, v_ij indexed by column
+  k <- ncol(d)
   V <- vapply(epsilon, function(target_epsilon) {
-    v <- apply(d, MARGIN = 2, function(col_d) {
-      mean(abs(col_d) > target_epsilon)
-    })
-    v
+    over_threshold <- abs(d) > target_epsilon
+    colMeans(over_threshold)
   }, numeric(k))
   V
 }
@@ -59,10 +57,10 @@ BYM2_StdDiff <- function(sim_phi, sim_rho, Q, X, ij_list) {
     j <- ij_list[pair_indx,]$j
     (U[i,] - U[j,])^2
   }, numeric(N))
-  prec_core <- vapply(sim_rho, function(target_rho) {
+  var_core <- vapply(sim_rho, function(target_rho) {
     1 / (1 + target_rho / (1 - target_rho) * D)
   }, numeric(N))
-  sds <- sqrt(t(prec_core) %*% U2_contrasts)
+  sds <- sqrt(t(var_core) %*% U2_contrasts)
   diffs <- vapply(seq_len(k), function(pair_indx) {
     i <- ij_list[pair_indx,]$i
     j <- ij_list[pair_indx,]$j
@@ -75,10 +73,10 @@ VijOrderGraph <- function(phi_diffs, ij_list, optim_e,
                           other_es = round(optim_e * c(1 / 3, 2 / 3, 3 / 2, 3),
                                            digits = 3),
                           T_line = NULL) {
-  optim_e_vij <- ComputeSimVij(phi_diffs, ij_list, epsilon = optim_e)
+  optim_e_vij <- ComputeSimVij(phi_diffs, epsilon = optim_e)
   optim_e_vij_order <- order(optim_e_vij, decreasing = F)
   rejection_paths <- lapply(other_es, function(e) {
-    e_vij <- ComputeSimVij(phi_diffs, ij_list, epsilon = e)
+    e_vij <- ComputeSimVij(phi_diffs, epsilon = e)
     e_vij_order <- order(e_vij[optim_e_vij_order], decreasing = F)
     rejection_path <- data.table(optim_e_vij = seq_along(optim_e_vij),
                                  e_vij_order = e_vij_order)

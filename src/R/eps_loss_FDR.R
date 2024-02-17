@@ -64,7 +64,7 @@ ComputeFDRFNRCurves <- function(V, t_seq, eps_seq, denom_e = 0.1) {
 GGPlotEpsLoss <- function(sim_results, loss_function, eps_seq_length = 50) {
   differences <- sim_results$sim$std_differences
   eps_seq <- seq(0.001, max(differences) / 2, length.out = eps_seq_length)
-  sim_vij <- ComputeSimVij(differences, sim_results$sim$ij_list, epsilon = eps_seq)
+  sim_vij <- ComputeSimVij(differences, epsilon = eps_seq)
   sim_loss <- loss_function(sim_vij, epsilon = eps_seq)
   optim_e <- sim_results$optim_params$optim_e
   ggplot() +
