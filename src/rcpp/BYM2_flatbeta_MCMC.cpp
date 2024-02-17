@@ -18,7 +18,12 @@ public:
   double b_sigma;
   double astar_sigma;
   double bstar_sigma;
-  double lambda_rho;
+  double a_rho;
+  double b_rho;
+  double astar_rho;
+  double bstar_rho;
+  double lower_rho;
+  double upper_rho;
   arma::vec vec_N;
   arma::vec Lambda;
   arma::mat P;
@@ -28,16 +33,12 @@ public:
   arma::mat matrix_pp;
   arma::vec vec_p;
   arma::vec vec2_p;
+
   BYM2FlatBetaMCMC(arma::mat X_,
                    arma::vec y_,
-                   arma::mat Q_,
-                   double a_sigma_,
-                   double b_sigma_,
-                   double lambda_rho_):
-    X(X_), y(y_), Q(Q_),
-    a_sigma(a_sigma_), b_sigma(b_sigma_), lambda_rho(lambda_rho_) {
+                   arma::mat Q_):
+    X(X_), y(y_), Q(Q_) {
     N = X.n_rows;
-    astar_sigma = a_sigma + (double) N / 2.0;
     p = X.n_cols;
     XtX = X.t() * X;
     XtX_R = chol(XtX, "upper");
@@ -69,6 +70,25 @@ public:
     matrix_pN = zeros(p, N);
     matrix_NN = zeros(N, N);
   }
+
+  // priors moved out of constructor since >6 args in constructor not supported
+  // in Rcpp modules
+  void setPriors(double a_sigma_,
+                 double b_sigma_,
+                 double a_rho_ = 0.0,
+                 double b_rho_ = 0.0,
+                 double lower_rho_ = 0.0,
+                 double upper_rho_ = 1.0) {
+    a_sigma = a_sigma_;
+    b_sigma = b_sigma_;
+    a_rho = a_rho_;
+    b_rho = b_rho_;
+    lower_rho = lower_rho_;
+    upper_rho = upper_rho_;
+    astar_sigma = a_sigma + (double) N / 2.0;
+    astar_rho = a_sigma + (double) N / 2.0;
+  }
+
   void initOLS() {
     // initialize beta to beta_ols
     beta = beta_ols;
@@ -82,42 +102,91 @@ public:
     sigma2 = rtr / (N - 1);
   }
 
+  void initZeros() {
+    beta = zeros(p);
+    gamma = zeros(N);
+    rtr = dot(y, y);
+    sigma2 = rtr / (N - 1);
+    updateRho(false);
+  }
+
+  void initRandom() {
+    beta = randn(p, distr_param(0, 1));
+    gamma = randn(N, distr_param(0.0, 1.0 / N));
+    vec_N = y - X * beta - gamma;
+    rtr = dot(vec_N, vec_N);
+    sigma2 = rtr / (N - 1);
+    updateRho(false);
+  }
+
   List MCMCSample(int n_samples) {
     arma::mat beta_sim = zeros(n_samples, p);
     arma::mat gamma_sim = zeros(n_samples, N);
     arma::vec sigma2_sim = zeros(n_samples);
     arma::vec rho_sim = zeros(n_samples);
     arma::mat YFit_sim = zeros(n_samples, N);
+    arma::vec log_postd = zeros(n_samples);
     arma::vec mu = zeros(N);
+    // log-likelihood for complete data
+    arma::vec ll = zeros(n_samples);
+    // pointwise-predicitive densities
+    arma::mat log_ppd = zeros(n_samples, N);
     for (int i = 0; i < n_samples; i++) {
-      updateBeta();
+      updateAllParams();
       beta_sim.row(i) = beta.t();
-      updateGamma();
-      gamma_sim.row(i) = gamma.t();
-      updateSigma2(true);
       sigma2_sim(i) = sigma2;
-      updateRho(false);
+      gamma_sim.row(i) = gamma.t();
       rho_sim(i) = rho;
       mu = X * beta + gamma;
       for (int j = 0; j < N; j++) {
         YFit_sim(i, j) = randn(distr_param(mu[j], sqrt(sigma2 * (1 - rho))));
       }
+      log_postd(i) = logPostd(false);
+      vec_N.fill(pow(sigma2 * (1 - rho), 0.5));
+      vec_N = log_normpdf(y, mu, vec_N);
+      ll(i) = sum(vec_N);
+      log_ppd.row(i) = vec_N.t();
     }
+    // estimated posterior mean
+    mu = (X * arma::mean(beta_sim, 0).t() + arma::mean(gamma_sim, 0).t()).as_col();
+    vec_N = zeros(N);
+    vec_N.fill(pow(mean(sigma2_sim) * (1 - mean(rho_sim)), 0.5));
+    vec_N = log_normpdf(y, mu, vec_N);
+    double logLBayes = sum(vec_N);
+    // compute DIC
+    double p_DIC = 2 * (logLBayes - mean(ll));
+    double DIC = -2 * (logLBayes - p_DIC);
+    // compute WAIC
+    // column-wise mean
+    arma::mat temp = mean(exp(log_ppd));
+    double lppd = accu(log(temp));
+    temp = var(log_ppd);
+    double p_WAIC2 = accu(temp);
+    double WAIC = -2 *(lppd - p_WAIC2);
     List out = List::create(_["beta"] = beta_sim,
                             _["gamma"] = gamma_sim,
                             _["sigma2"] = sigma2_sim,
                             _["rho"] = rho_sim,
-                            _["YFit"] = YFit_sim);
+                            _["YFit"] = YFit_sim,
+                            _["log_postd"] = log_postd,
+                            _["DIC"] = DIC,
+                            _["p_DIC"] = p_DIC,
+                            _["WAIC"] = WAIC,
+                            _["p_WAIC2"] = p_WAIC2);
     return out;
   }
 
   void burnMCMCSample(int n_iter) {
     for (int i = 0; i < n_iter; i++) {
-      updateBeta();
-      updateGamma();
-      updateSigma2(true);
-      updateRho(false);
+      updateAllParams();
     }
+  }
+
+  void updateAllParams() {
+    updateBeta();
+    updateGamma();
+    updateSigma2(true);
+    updateRho(false);
   }
 
   double logPostd(bool update_rtr = true) {
@@ -125,10 +194,16 @@ public:
       vec_N = y - X * beta - gamma;
       rtr = dot(vec_N, vec_N);
     }
+    // likelihood
     double out = (double) -N / 2.0 * log(2.0 * datum::pi * sigma2 * (1 - rho));
     out -= rtr / (2 * sigma2 * (1 - rho));
+    // CAR prior on phi
+    out -= (double) N / 2.0 * log(2 * datum::pi * sigma2 * rho);
+    out -= dot(gamma, gamma) / (2 * sigma2 * rho);
     // IG prior on sigma2
     out -= (a_sigma + 1) * log(sigma2) + 1 / (b_sigma * sigma2);
+    // truncated IG prior on 1 - rho
+    out -= (a_rho + 1) * log(1 - rho) + 1 / (b_rho * (1 - rho));
     return out;
   }
 
@@ -230,14 +305,14 @@ public:
       vec_N = y - X * beta - gamma;
       rtr = dot(vec_N, vec_N);
     }
-    double theta = randg(distr_param(1.0, 1.0 / lambda_rho));
-    double rho_star = exp(-1.0 * theta);
-    double MH = (double) N / 2.0 * log((1.0 - rho) / (1.0 - rho_star));
-    MH += rtr / (2.0 * sigma2) * (1.0 / (1.0 - rho) - 1.0 / (1.0 - rho_star));
-    MH += (lambda_rho - 1) * log(rho / rho_star);
-    if (log(randu(distr_param(0, 1))) <= MH) {
-      rho = rho_star;
+    // p(rho) = TruncIG(1 - rho | a_rho, b_rho, [0, 1])
+    // p(rho | y) = TruncIG(1 - rho | astar_rho, bstar_rho, [0, 1])
+    bstar_rho = b_rho + rtr / (2.0 * sigma2);
+    double rho_star = 2.0;
+    while (rho_star > upper_rho || rho_star < lower_rho) {
+      rho_star = 1.0 - 1.0 / randg(distr_param(astar_rho, 1.0 / bstar_rho));
     }
+    rho = rho_star;
   }
 
 private:
@@ -257,7 +332,7 @@ private:
 RCPP_MODULE(BYM2FlatBetaMCMC_module) {
 
   class_<BYM2FlatBetaMCMC>("BYM2FlatBetaMCMC")
-  .constructor<arma::mat, arma::vec, arma::mat, double, double, double>()
+  .constructor<arma::mat, arma::vec, arma::mat>()
 
   .field("X", &BYM2FlatBetaMCMC::X)
   .field("y", &BYM2FlatBetaMCMC::y)
@@ -266,9 +341,10 @@ RCPP_MODULE(BYM2FlatBetaMCMC_module) {
   .field("gamma", &BYM2FlatBetaMCMC::gamma)
   .field("rho", &BYM2FlatBetaMCMC::rho)
   .field("sigma2", &BYM2FlatBetaMCMC::sigma2)
-  .field("lambda_rho", &BYM2FlatBetaMCMC::lambda_rho)
   .field("astar_sigma", &BYM2FlatBetaMCMC::astar_sigma)
   .field("bstar_sigma", &BYM2FlatBetaMCMC::bstar_sigma)
+  .field("astar_rho", &BYM2FlatBetaMCMC::astar_rho)
+  .field("bstar_rho", &BYM2FlatBetaMCMC::bstar_rho)
   .field("vec_N", &BYM2FlatBetaMCMC::vec_N)
   .field("Lambda", &BYM2FlatBetaMCMC::Lambda)
   .field("P", &BYM2FlatBetaMCMC::P)
@@ -278,7 +354,10 @@ RCPP_MODULE(BYM2FlatBetaMCMC_module) {
   .field("U", &BYM2FlatBetaMCMC::U)
   .field("D", &BYM2FlatBetaMCMC::D)
 
+  .method("setPriors", &BYM2FlatBetaMCMC::setPriors)
   .method("initOLS", &BYM2FlatBetaMCMC::initOLS)
+  .method("initZeros", &BYM2FlatBetaMCMC::initZeros)
+  .method("initRandom", &BYM2FlatBetaMCMC::initRandom)
   .method("MCMCSample", &BYM2FlatBetaMCMC::MCMCSample)
   .method("burnMCMCSample", &BYM2FlatBetaMCMC::burnMCMCSample)
   .method("updateBeta", &BYM2FlatBetaMCMC::updateBeta)

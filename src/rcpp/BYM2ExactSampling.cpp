@@ -18,6 +18,7 @@ public:
   double b_0;
   double a_n;
   double b_n;
+  double logLBayes;
   BYM2ExactSampler(arma::mat X_,
                    arma::vec y_,
                    arma::mat Q_,
@@ -29,6 +30,10 @@ public:
     Xty = X.t() * y;
     m_nstar = zeros(N + p);
     M_nstar_inv = zeros(N + p, N + p);
+    gammastar_mean = zeros(N + p);
+    gammastar = zeros(N + p);
+    vec_p = zeros(p);
+    vec_N = zeros(N);
   }
 
   void SetPriors(arma::mat M_0inv_,
@@ -53,15 +58,22 @@ public:
     M_nstar_chol.eye(N + p, N + p);
     M_nstar_chol = solve(trimatu(M_nstar_inv), M_nstar_chol);
     gammastar_mean = trimatl(M_nstar_chol.t()) * m_nstar;
-    a_n = a_0 + N / 2.0;
+    a_n = a_0 + (double) N / 2.0;
     b_n = dot(gammastar_mean, gammastar_mean);
+    gammastar_mean = trimatu(M_nstar_chol) * gammastar_mean;
     M_0inv_chol = chol(M_0inv, "upper");
     vec_p = solve(trimatu(M_0inv_chol), m_0);
     b_n = dot(vec_p, vec_p) - b_n;
     b_n += dot(y, y) / (1 - rho);
     b_n = b_0 + b_n / 2.0;
-    gammastar_mean = trimatu(M_nstar_chol) * gammastar_mean;
-    gammastar = zeros(N + p);
+    // pre-compute quantities for WAIC
+    arma::vec mu = X * gammastar_mean.subvec(0, p - 1) +
+      gammastar_mean.subvec(p, N + p - 1);
+    double sigma2_mean = b_n / (a_n - 1);
+    vec_N.fill(pow(sigma2_mean * (1 - rho), 0.5));
+    vec_N = log_normpdf(y, mu, vec_N);
+    // log p(y|theta_bayes)
+    logLBayes = sum(vec_N);
   }
 
   List ExactSample(int n_samples) {
@@ -72,6 +84,10 @@ public:
     arma::vec sigma2_sim = zeros(n_samples);
     arma::mat YFit_sim = zeros(n_samples, N);
     arma::vec mu = zeros(N);
+    // log-likelihood for complete data
+    arma::vec ll = zeros(n_samples);
+    // pointwise-predicitive densities
+    arma::mat log_ppd = zeros(n_samples, N);
     for (int i = 0; i < n_samples; i++) {
       sigma2 = 1.0 / randg(distr_param(a_n, 1.0 / b_n));
       gammastar = randn(N + p, distr_param(0, 1));
@@ -85,11 +101,29 @@ public:
       for (int j = 0; j < N; j++) {
         YFit_sim(i, j) = randn(distr_param(mu[j], sqrt(sigma2 * (1 - rho))));
       }
+      vec_N.fill(pow(sigma2 * (1 - rho), 0.5));
+      vec_N = log_normpdf(y, mu, vec_N);
+      ll(i) = sum(vec_N);
+      log_ppd.row(i) = vec_N.t();
     }
+    // compute DIC
+    double p_DIC = 2 * (logLBayes - mean(ll));
+    double DIC = -2 * (logLBayes - p_DIC);
+    // compute WAIC
+    // column-wise mean
+    arma::mat temp = mean(exp(log_ppd));
+    double lppd = accu(log(temp));
+    temp = var(log_ppd);
+    double p_WAIC2 = accu(temp);
+    double WAIC = -2 *(lppd - p_WAIC2);
     List out = List::create(_["beta"] = beta_sim,
                             _["gamma"] = gamma_sim,
                             _["sigma2"] = sigma2_sim,
-                            _["YFit"] = YFit_sim);
+                            _["YFit"] = YFit_sim,
+                            _["DIC"] = DIC,
+                            _["p_DIC"] = p_DIC,
+                            _["WAIC"] = WAIC,
+                            _["p_WAIC2"] = p_WAIC2);
     return out;
   }
 
@@ -105,6 +139,7 @@ private:
   arma::vec gammastar;
   arma::vec gammastar_mean;
   arma::vec vec_p;
+  arma::vec vec_N;
 };
 
 RCPP_MODULE(BYM2ExactSampler_module) {
