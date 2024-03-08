@@ -11,20 +11,17 @@ public:
   arma::mat Q;
   arma::vec beta;
   arma::vec gamma;
-  double rho;
-  double sigma2;
+  double rho, sigma2;
   // priors
-  double a_sigma;
-  double b_sigma;
-  double astar_sigma;
-  double bstar_sigma;
-  double a_rho;
-  double b_rho;
-  double astar_rho;
-  double bstar_rho;
-  double lower_rho;
-  double upper_rho;
-  arma::vec vec_N;
+  double a_sigma, b_sigma;
+  double astar_sigma, bstar_sigma;
+  std::string rho_prior_type;
+  // Truncated inverse gamma prior on 1 - rho
+  double a_rho, b_rho;
+  double astar_rho, bstar_rho;
+  // PC prior on rho
+  double lambda_rho;
+  double lower_rho, upper_rho;
   arma::vec Lambda;
   arma::mat P;
   arma::mat C;
@@ -33,6 +30,7 @@ public:
   arma::mat matrix_pp;
   arma::vec vec_p;
   arma::vec vec2_p;
+  arma::vec vec_N;
 
   BYM2FlatBetaMCMC(arma::mat X_,
                    arma::vec y_,
@@ -75,14 +73,29 @@ public:
   // in Rcpp modules
   void setPriors(double a_sigma_,
                  double b_sigma_,
-                 double a_rho_ = 0.0,
-                 double b_rho_ = 0.0,
-                 double lower_rho_ = 0.0,
-                 double upper_rho_ = 1.0) {
+                 std::string rho_prior_type_,
+                 double a_rho_,
+                 double b_rho_,
+                 double lower_rho_,
+                 double upper_rho_,
+                 double lambda_rho_) {
     a_sigma = a_sigma_;
     b_sigma = b_sigma_;
+    if (rho_prior_type_ == "pc") {
+      lambda_rho = lambda_rho_;
+      a_rho = 0.0;
+      b_rho = 0.0;
+    } else if (rho_prior_type_ == "truncig") {
+      a_rho = a_rho_;
+      b_rho = b_rho_;
+      lambda_rho = -1.0;
+    } else {
+      throw std::runtime_error("allowed rho prior types: 'pc', 'truncig'");
+    }
+    rho_prior_type = rho_prior_type_;
     a_rho = a_rho_;
     b_rho = b_rho_;
+    lambda_rho = lambda_rho_;
     lower_rho = lower_rho_;
     upper_rho = upper_rho_;
     astar_sigma = a_sigma + (double) N / 2.0;
@@ -155,14 +168,22 @@ public:
     double logLBayes = sum(vec_N);
     // compute DIC
     double p_DIC = 2 * (logLBayes - mean(ll));
+    double p_DIC2 = 2 * var(ll);
     double DIC = -2 * (logLBayes - p_DIC);
     // compute WAIC
     // column-wise mean
     arma::mat temp = mean(exp(log_ppd));
     double lppd = accu(log(temp));
+    double p_WAIC = 2 * accu(log(temp) - mean(log_ppd));
     temp = var(log_ppd);
     double p_WAIC2 = accu(temp);
     double WAIC = -2 *(lppd - p_WAIC2);
+    // predictive loss from Gelfand and Ghosh (1998)
+    for (int i = 0; i < N; i++) {
+      vec_N(i) = y(i) - mean(YFit_sim.col(i));
+    }
+    double G = dot(vec_N, vec_N);
+    double P = accu(var(YFit_sim));
     List out = List::create(_["beta"] = beta_sim,
                             _["gamma"] = gamma_sim,
                             _["sigma2"] = sigma2_sim,
@@ -171,8 +192,13 @@ public:
                             _["log_postd"] = log_postd,
                             _["DIC"] = DIC,
                             _["p_DIC"] = p_DIC,
+                            _["p_DIC2"] = p_DIC2,
                             _["WAIC"] = WAIC,
-                            _["p_WAIC2"] = p_WAIC2);
+                            _["p_WAIC"] = p_WAIC,
+                            _["p_WAIC2"] = p_WAIC2,
+                            _["pred_G"] = G,
+                            _["pred_P"] = P,
+                            _["pred_D"] = G + P);
     return out;
   }
 
@@ -187,64 +213,6 @@ public:
     updateGamma();
     updateSigma2(true);
     updateRho(false);
-  }
-
-  double logPostd(bool update_rtr = true) {
-    if (update_rtr) {
-      vec_N = y - X * beta - gamma;
-      rtr = dot(vec_N, vec_N);
-    }
-    // likelihood
-    double out = (double) -N / 2.0 * log(2.0 * datum::pi * sigma2 * (1 - rho));
-    out -= rtr / (2 * sigma2 * (1 - rho));
-    // CAR prior on phi
-    out -= (double) N / 2.0 * log(2 * datum::pi * sigma2 * rho);
-    out -= dot(gamma, gamma) / (2 * sigma2 * rho);
-    // IG prior on sigma2
-    out -= (a_sigma + 1) * log(sigma2) + 1 / (b_sigma * sigma2);
-    // truncated IG prior on 1 - rho
-    out -= (a_rho + 1) * log(1 - rho) + 1 / (b_rho * (1 - rho));
-    return out;
-  }
-
-  DataFrame rhoChainAnalysis(int n_chains,
-                     int n_burnin,
-                     int n_samples) {
-    int total_samps = n_chains * n_samples;
-    int indx;
-    double init_rho;
-    arma::vec sigma2_sim = zeros(total_samps);
-    arma::vec rho_sim = zeros(total_samps);
-    arma::vec log_postd = zeros(total_samps);
-    arma::vec chain_indx = zeros(total_samps);
-    arma::vec init_rhos = zeros(total_samps);
-    arma::vec rtr_values = zeros(total_samps);
-    for (int i = 0; i < n_chains; i++) {
-      initOLS();
-      init_rho = randu(distr_param(0, 1));
-      rho = init_rho;
-      burnMCMCSample(n_burnin);
-      for (int j = 0; j < n_samples; j++) {
-        indx = i * n_samples + j;
-        updateBeta();
-        updateGamma();
-        updateSigma2(true);
-        updateRho(false);
-        sigma2_sim(indx) = sigma2;
-        rho_sim(indx) = rho;
-        log_postd(indx) = logPostd(false);
-        chain_indx(indx) = i;
-        init_rhos(indx) = init_rho;
-        rtr_values(indx) = rtr;
-      }
-    }
-    DataFrame out = DataFrame::create(_["chain"] = chain_indx,
-                                      _["init_rho"] = init_rhos,
-                                      _["sigma2"] = sigma2_sim,
-                                      _["rho"] = rho_sim,
-                                      _["log_postd"] = log_postd,
-                                      _["rtr"] = rtr_values);
-    return out;
   }
 
   void updateBeta() {
@@ -305,14 +273,55 @@ public:
       vec_N = y - X * beta - gamma;
       rtr = dot(vec_N, vec_N);
     }
-    // p(rho) = TruncIG(1 - rho | a_rho, b_rho, [0, 1])
-    // p(rho | y) = TruncIG(1 - rho | astar_rho, bstar_rho, [0, 1])
     bstar_rho = b_rho + rtr / (2.0 * sigma2);
     double rho_star = 2.0;
+    double MH;
+    double u;
     while (rho_star > upper_rho || rho_star < lower_rho) {
       rho_star = 1.0 - 1.0 / randg(distr_param(astar_rho, 1.0 / bstar_rho));
     }
+    if (rho_prior_type == "pc") {
+      MH = pow(2.0 * KLD(rho), 0.5) - pow(2.0 * KLD(rho_star), 0.5);
+      MH = MH * lambda_rho;
+      u = log(randu(distr_param(0, 1)));
+      rho_star = u < MH ? rho_star : rho;
+    }
     rho = rho_star;
+  }
+
+  double logPostd(bool update_rtr = true) {
+    if (update_rtr) {
+      vec_N = y - X * beta - gamma;
+      rtr = dot(vec_N, vec_N);
+    }
+    // likelihood
+    double out = (double) -N / 2.0 * log(2.0 * datum::pi * sigma2 * (1 - rho));
+    out -= rtr / (2 * sigma2 * (1 - rho));
+    // CAR prior on phi
+    out -= (double) N / 2.0 * log(2 * datum::pi * sigma2 * rho);
+    out -= dot(gamma, gamma) / (2 * sigma2 * rho);
+    // IG prior on sigma2
+    out -= (a_sigma + 1) * log(sigma2) + 1 / (b_sigma * sigma2);
+    // prior on rho
+    if (rho_prior_type == "pc") {
+      out -= rhoPCPriorlogd(rho);
+    } else {
+      out -= (a_rho + 1) * log(1 - rho) + 1 / (b_rho * (1 - rho));
+    }
+    return out;
+  }
+
+  double KLD(double rho_star) {
+    double out = (double) -N / 2.0;
+    out -= sum(log(rho_star / Lambda + (1 - rho_star))) / 2;
+    out += sum(rho_star / Lambda + (1 - rho_star)) / 2;
+    return out;
+  }
+
+  double rhoPCPriorlogd(double rho_star) {
+    double d = sqrt(2.0 * KLD(rho_star));
+    double logd = log(lambda_rho) - lambda_rho * d;
+    return logd;
   }
 
 private:
@@ -345,6 +354,9 @@ RCPP_MODULE(BYM2FlatBetaMCMC_module) {
   .field("bstar_sigma", &BYM2FlatBetaMCMC::bstar_sigma)
   .field("astar_rho", &BYM2FlatBetaMCMC::astar_rho)
   .field("bstar_rho", &BYM2FlatBetaMCMC::bstar_rho)
+  .field("lower_rho", &BYM2FlatBetaMCMC::lower_rho)
+  .field("upper_rho", &BYM2FlatBetaMCMC::upper_rho)
+  .field("lambda_rho", &BYM2FlatBetaMCMC::lambda_rho)
   .field("vec_N", &BYM2FlatBetaMCMC::vec_N)
   .field("Lambda", &BYM2FlatBetaMCMC::Lambda)
   .field("P", &BYM2FlatBetaMCMC::P)
@@ -365,6 +377,5 @@ RCPP_MODULE(BYM2FlatBetaMCMC_module) {
   .method("updateRho", &BYM2FlatBetaMCMC::updateRho)
   .method("updateSigma2", &BYM2FlatBetaMCMC::updateSigma2)
   .method("logPostd", &BYM2FlatBetaMCMC::logPostd)
-  .method("rhoChainAnalysis", &BYM2FlatBetaMCMC::rhoChainAnalysis)
   ;
 }
