@@ -93,7 +93,7 @@ plot(density(abs(phi_diffs[,55])), xlim = c(0, 6))
 loss_function <- function(V, epsilon) GeneralLoss(V, epsilon,
                                                   function(x) sqrt(x), log)
 eps_optim <- optim(median(abs(phi_diffs)), function(e) {
-  e_vij <- ComputeSimVij(phi_diffs, ij_list, epsilon = e)
+  e_vij <- ComputeSimVij(phi_diffs, epsilon = e)
   loss_function(e_vij, epsilon = e)
 }, method = "Brent", lower = 0, upper = max(abs(phi_diffs)))
 optim_e <- eps_optim$par
@@ -102,8 +102,7 @@ true_phi_diffs <- ComputeSimSTDDifferences(matrix(phi, ncol = 1),
                                            ij_list = ij_list)
 mean(abs(true_phi_diffs) > optim_e)
 # select cutoff t in d(i, j) = I(v_ij > t) to control FDR and minimize FNR
-optim_e_vij <- ComputeSimVij(phi_diffs, ij_list,
-                             epsilon = optim_e)
+optim_e_vij <- ComputeSimVij(phi_diffs, epsilon = optim_e)
 eta <- .1
 t_seq_length <- 10000
 t_seq <- seq(0, max(optim_e_vij) - .001, length.out = t_seq_length)
@@ -117,14 +116,10 @@ e3 <- round(optim_e / 1.5, digits = 3)
 e4 <- round(optim_e * 1.5, digits = 3)
 e5 <- round(optim_e * 3, digits = 3)
 
-e2_vij <- ComputeSimVij(phi_diffs, ij_list,
-                        epsilon = e2)
-e3_vij <- ComputeSimVij(phi_diffs, ij_list,
-                        epsilon = e3)
-e4_vij <- ComputeSimVij(phi_diffs, ij_list,
-                        epsilon = e4)
-e5_vij <- ComputeSimVij(phi_diffs, ij_list,
-                        epsilon = e5)
+e2_vij <- ComputeSimVij(phi_diffs, epsilon = e2)
+e3_vij <- ComputeSimVij(phi_diffs, epsilon = e3)
+e4_vij <- ComputeSimVij(phi_diffs, epsilon = e4)
+e5_vij <- ComputeSimVij(phi_diffs, epsilon = e5)
 
 optim_e_vij_order <- order(optim_e_vij, decreasing = F)
 e2_vij_order <- order(e2_vij[optim_e_vij_order], decreasing = F)
