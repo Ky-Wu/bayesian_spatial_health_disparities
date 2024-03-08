@@ -14,11 +14,15 @@ public:
   List priors;
   arma::mat M_0inv;
   arma::vec m_0;
+  arma::mat M_nstar_inv;
+  arma::vec m_nstar;
   double a_0;
   double b_0;
   double a_n;
   double b_n;
-  double logLBayes;
+  arma::vec gammastar_mean;
+  double llBayes;
+  double logCollapsedBayes;
   BYM2ExactSampler(arma::mat X_,
                    arma::vec y_,
                    arma::mat Q_,
@@ -34,6 +38,7 @@ public:
     gammastar = zeros(N + p);
     vec_p = zeros(p);
     vec_N = zeros(N);
+    eig_sym(Lambda, P, Q);
   }
 
   void SetPriors(arma::mat M_0inv_,
@@ -47,7 +52,7 @@ public:
     m_nstar.subvec(0, p - 1) = Xty / (1.0 - rho) + m_0;
     m_nstar.subvec(p, N + p - 1) = y / (1.0 - rho);
     // M_nstar_inv = X_star' V_yinv X_star
-    M_nstar_inv.submat(0, 0, p - 1, p - 1) = XtX / (1 - rho) + M_0inv;
+    M_nstar_inv.submat(0, 0, p - 1, p - 1) = XtX / (1.0 - rho) + M_0inv;
     M_nstar_inv.submat(0, p, p - 1, N + p - 1) = X.t() / (1.0 - rho);
     M_nstar_inv.submat(p, 0, N + p - 1, p - 1) = X / (1.0 - rho);
     M_nstar_inv.submat(p, p, N + p - 1, N + p - 1) = Q / rho;
@@ -73,7 +78,9 @@ public:
     vec_N.fill(pow(sigma2_mean * (1 - rho), 0.5));
     vec_N = log_normpdf(y, mu, vec_N);
     // log p(y|theta_bayes)
-    logLBayes = sum(vec_N);
+    llBayes = sum(vec_N);
+    vec_p = gammastar_mean.subvec(0, p - 1);
+    logCollapsedBayes = collapsedLikelihood(vec_p, sigma2_mean);
   }
 
   List ExactSample(int n_samples) {
@@ -88,6 +95,8 @@ public:
     arma::vec ll = zeros(n_samples);
     // pointwise-predicitive densities
     arma::mat log_ppd = zeros(n_samples, N);
+    // non-spatial likelihood
+    arma::vec collapsedLL = zeros(n_samples);
     for (int i = 0; i < n_samples; i++) {
       sigma2 = 1.0 / randg(distr_param(a_n, 1.0 / b_n));
       gammastar = randn(N + p, distr_param(0, 1));
@@ -105,25 +114,56 @@ public:
       vec_N = log_normpdf(y, mu, vec_N);
       ll(i) = sum(vec_N);
       log_ppd.row(i) = vec_N.t();
+      vec_p = gammastar.subvec(0, p - 1);
+      collapsedLL(i) = collapsedLikelihood(vec_p, sigma2);
     }
     // compute DIC
-    double p_DIC = 2 * (logLBayes - mean(ll));
-    double DIC = -2 * (logLBayes - p_DIC);
+    double p_DIC = 2 * (llBayes - mean(ll));
+    double p_DIC2 = 2 * var(ll);
+    double DIC = -2 * (llBayes - p_DIC);
     // compute WAIC
     // column-wise mean
     arma::mat temp = mean(exp(log_ppd));
     double lppd = accu(log(temp));
+    double p_WAIC = 2 * accu(log(temp) - mean(log_ppd));
     temp = var(log_ppd);
     double p_WAIC2 = accu(temp);
     double WAIC = -2 *(lppd - p_WAIC2);
+    // predictive loss from Gelfand and Ghosh (1998)
+    for (int i = 0; i < N; i++) {
+      vec_N(i) = y(i) - mean(YFit_sim.col(i));
+    }
+    double G = dot(vec_N, vec_N);
+    double P = accu(var(YFit_sim));
+    // collapsed likelihood DIC
+    double p_DIC_collapsed = 2 * (logCollapsedBayes - mean(collapsedLL));
+    double DIC_collapsed = -2 * (logCollapsedBayes - p_DIC_collapsed);
     List out = List::create(_["beta"] = beta_sim,
                             _["gamma"] = gamma_sim,
                             _["sigma2"] = sigma2_sim,
                             _["YFit"] = YFit_sim,
                             _["DIC"] = DIC,
                             _["p_DIC"] = p_DIC,
+                            _["p_DIC2"] = p_DIC2,
                             _["WAIC"] = WAIC,
-                            _["p_WAIC2"] = p_WAIC2);
+                            _["p_WAIC"] = p_WAIC,
+                            _["p_WAIC2"] = p_WAIC2,
+                            _["p_DIC_collapsed"] = p_DIC_collapsed,
+                            _["DIC_collapsed"] = DIC_collapsed,
+                            _["pred_G"] = G,
+                            _["pred_P"] = P,
+                            _["pred_D"] = G + P);
+    return out;
+  }
+
+  double collapsedLikelihood(arma::vec & beta,
+                              double sigma2) {
+    double out = (double) N / -2.0 * log(2 * datum::pi * sigma2);
+    out -= (sum(rho / Lambda) + N * (1 - rho)) / 2;
+    vec_N = y - X * beta;
+    vec_N = P.t() * vec_N;
+    vec_N = pow(rho / Lambda + (1 - rho), -0.5) % vec_N;
+    out -= dot(vec_N, vec_N) / (2 * sigma2);
     return out;
   }
 
@@ -132,12 +172,11 @@ private:
   int p;
   arma::mat XtX;
   arma::vec Xty;
-  arma::mat M_nstar_inv;
-  arma::vec m_nstar;
   arma::mat M_nstar_chol;
   arma::mat M_0inv_chol;
   arma::vec gammastar;
-  arma::vec gammastar_mean;
+  arma::mat P;
+  arma::vec Lambda;
   arma::vec vec_p;
   arma::vec vec_N;
 };
@@ -157,6 +196,9 @@ RCPP_MODULE(BYM2ExactSampler_module) {
   .field("b_0", &BYM2ExactSampler::b_0)
   .field("a_n", &BYM2ExactSampler::a_n)
   .field("b_n", &BYM2ExactSampler::b_n)
+  .field("gammastar_mean", &BYM2ExactSampler::gammastar_mean)
+  .field("M_nstar_inv", &BYM2ExactSampler::M_nstar_inv)
+  .field("m_nstar", &BYM2ExactSampler::m_nstar)
 
   .method("ExactSample", &BYM2ExactSampler::ExactSample)
   .method("SetPriors", &BYM2ExactSampler::SetPriors)
