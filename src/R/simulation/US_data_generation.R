@@ -8,7 +8,7 @@ library(maps)
 library(maptools)
 library(magrittr)
 library(stringr)
-
+set.seed(122)
 # Import US counties
 county_poly <- maps::map("county", fill = TRUE, plot = FALSE)
 county_state <- strsplit(county_poly$names, ",") %>%
@@ -27,7 +27,6 @@ county_nbs <- poly2nb(county_sp)
 W <- nb2mat(county_nbs, style = "B")
 D <- diag(rowSums(W))
 alpha <- 0.99
-Q <- D
 Q <- D - alpha * W
 Q_cholR <- chol(Q)
 Sigma <- chol2inv(Q_cholR)
@@ -40,7 +39,7 @@ N <- nrow(W)
 # rho = proportion of overall variance attributed to spatial variance
 # sigma2 = overall variance
 sigma2 <- 4
-rho <- 0.56
+rho <- 0.93
 sigma2Sp <- rho * sigma2
 sigma2NSp <- (1 - rho) * sigma2
 # Generate random effects
@@ -59,3 +58,7 @@ ij_list <- data.frame(
 )
 ij_list <- ij_list[ij_list$i < ij_list$j, ]
 rownames(ij_list) <- NULL
+
+county_sf <- st_as_sf(county_sp)
+rownames(county_sf) <- NULL
+st_crs(county_sf) <- st_crs(st_as_sf(county_poly))
