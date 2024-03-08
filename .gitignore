@@ -2,7 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-.Rds
-.Rproj
+*.Rds
+*.Rproj
 .DS_Store
 rstudio/
