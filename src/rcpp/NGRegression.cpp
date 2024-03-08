@@ -100,13 +100,22 @@ public:
     temp = var(log_ppd);
     double p_WAIC2 = accu(temp);
     double WAIC = -2 *(lppd - p_WAIC2);
+    // predictive loss from Gelfand and Ghosh (1998)
+    for (int i = 0; i < N; i++) {
+      vec_N(i) = y(i) - mean(YFit_sim.col(i));
+    }
+    double G = dot(vec_N, vec_N);
+    double P = accu(var(YFit_sim));
     List out = List::create(_["beta"] = beta_sim,
                             _["sigma2"] = sigma2_sim,
                             _["YFit"] = YFit_sim,
                             _["DIC"] = DIC,
                             _["p_DIC"] = p_DIC,
                             _["WAIC"] = WAIC,
-                            _["p_WAIC2"] = p_WAIC2);
+                            _["p_WAIC2"] = p_WAIC2,
+                            _["pred_G"] = G,
+                            _["pred_P"] = P,
+                            _["pred_D"] = G + P);
     return out;
   }
 
