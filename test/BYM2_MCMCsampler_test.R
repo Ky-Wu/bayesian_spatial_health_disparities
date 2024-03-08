@@ -9,7 +9,7 @@ library(Rcpp)
 library(RcppArmadillo)
 library(ggplot2)
 rm(list = ls())
-set.seed(1130)
+set.seed(122)
 
 # Data generation
 source(file.path(getwd(), "src", "R", "simulation", "US_data_generation.R"))
@@ -17,29 +17,37 @@ source(file.path(getwd(), "src", "R", "simulation", "US_data_generation.R"))
 source(file.path(getwd(), "src", "R", "simulation", "simulation_helper.R"))
 source(file.path(getwd(), "src", "R", "eps_loss_FDR.R"))
 source(file.path(getwd(), "src", "R", "vij_computation.R"))
-
+# Gibbs sampler
 Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2_flatbeta_MCMC.cpp"))
+# Fixed Rho Exact sampling
+Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2ExactSampling.cpp"))
 
 # Priors
-a_sigma <- 2.1
+a_sigma <- 0.1
 b_sigma <- 0.1
-a_rho <- .1
-b_rho <- .1
+# PC prior, ignore IG prior parameters
+a_rho <- 0.0
+b_rho <- 0.0
 # limits on possible values of rho
-lower_rho <- 0.00
+lower_rho <- 0
 upper_rho <- 1.0
+# PC prior: pi(rho) = lambda * exp(-lambda * d(rho)), d(rho) = sqrt(2 * KLD(rho))
+lambda_rho <- .0335
 BYM2Sampler <- new(BYM2FlatBetaMCMC, X, y, Q_scaled)
-BYM2Sampler$setPriors(a_sigma, b_sigma, a_rho, b_rho, lower_rho, upper_rho)
-BYM2Sampler$initRandom()
+BYM2Sampler$setPriors(a_sigma, b_sigma, rho_prior_type = "pc",
+                      a_rho, b_rho,
+                      lower_rho, upper_rho, lambda_rho)
+BYM2Sampler$initOLS()
 
-for(j in seq_len(100)) {
-  print(paste0(j, "/100"))
+warm_up_cycles <- 100
+for(j in seq_len(warm_up_cycles)) {
+  print(paste0(j, "/", warm_up_cycles))
   print(paste0("current rho: ", BYM2Sampler$rho))
   print(paste0("current sigma2: ", BYM2Sampler$sigma2))
   BYM2Sampler$burnMCMCSample(100)
 }
 # DRAW POSTERIOR SAMPLES
-n_sim <- 10000
+n_sim <- 30000
 system.time({
   samps <- BYM2Sampler$MCMCSample(n_sim)
 })
@@ -49,7 +57,6 @@ gamma_sim <- samps$gamma
 sigma2_sim <- samps$sigma2
 rho_sim <- samps$rho
 YFit_sim <- samps$YFit
-
 
 hist(rho_sim)
 hist(sigma2_sim)
@@ -62,7 +69,6 @@ hist(beta_sim[,2])
 phi_sim <- apply(gamma_sim, MARGIN = 2, function(x) {
   x / sqrt(sigma2_sim * rho_sim)
 })
-hist(phi_sim[,130], xlim = c(-5, 5), breaks = 50)
 
 phi_diffs <- BYM2_StdDiff(phi_sim, rho_sim, Q_scaled, X, ij_list)
 # phi_diffs <- vapply(seq_len(k), function(pair_indx) {
@@ -83,35 +89,34 @@ phi_truediffs <- BYM2_StdDiff(matrix(phi, nrow = 1),
 # Maximize entropy of posterior distribution with respect to epsilon
 loss_function <- function(V, epsilon) -Entropy(V)
 eps_optim <- optim(median(abs(phi_diffs)), function(e) {
-  e_vij <- ComputeSimVij(phi_diffs, ij_list, epsilon = e)
+  e_vij <- ComputeSimVij(phi_diffs, epsilon = e)
   loss_function(e_vij, epsilon = e)
 }, method = "Brent", lower = 0.0001, upper = 5.0)
 optim_e <- eps_optim$par
-eps_optim
 
 true_diff <- abs(phi_truediffs) > optim_e
 #true_diff <- (abs(true_phi_diffs) > optim_e)
 mean(true_diff)
 # select cutoff t in d(i, j) = I(v_ij > t) to control FDR and minimize FNR
-optim_e_vij <- ComputeSimVij(phi_diffs, ij_list,
-                             epsilon = optim_e)
+optim_e_vij <- ComputeSimVij(phi_diffs, epsilon = optim_e)
 optim_e_vij_order <- order(optim_e_vij, decreasing = F)
-eta <- .15
 t_seq_length <- 10000
 t_seq <- seq(0, max(optim_e_vij) - .001, length.out = t_seq_length)
 t_FDR <- vapply(t_seq, function(t) FDR_estimate(optim_e_vij, t, e = 0), numeric(1))
 t_FNR <- vapply(t_seq, function(t) FNR_estimate(optim_e_vij, t, e = 0), numeric(1))
+
+
+eta <- .30
 optim_t <- min(c(t_seq[t_FDR <= eta], 1))
 optim_t
-
-sum(optim_e_vij >= optim_t)
-
 decisions <- logical(nrow(ij_list))
 decisions[optim_e_vij >= optim_t] <- TRUE
 print(paste0("Optimal epsilon: ", optim_e))
 print(paste0("Optimal t: ", optim_t))
 print(ComputeClassificationMetrics(decisions, true_diff))
 mean(decisions)
+
+
 
 rej_indx <- optim_e_vij_order[optim_e_vij_order %in%
                                 which(optim_e_vij >= optim_t)]
@@ -134,17 +139,17 @@ yfit_pmeans_df <- cbind(y_pmeans = yfit_pmeans, county_sf)
 p1 <- ggplot() +
   geom_sf(data = x1, aes(fill = y)) +
   scale_fill_viridis_c() +
-  geom_sf(data = intersections, col = "red", alpha = 0) +
+  #geom_sf(data = intersections, col = "red", alpha = 0) +
   theme_minimal() +
   theme(legend.position = "bottom")
 p3 <- ggplot() +
   geom_sf(data = yfit_pmeans_df, aes(fill = y_pmeans)) +
   scale_fill_viridis_c() +
-  geom_sf(data = intersections, col = "red", alpha = 0) +
+  #geom_sf(data = intersections, col = "red", alpha = 0) +
   theme_minimal() +
   theme(legend.position = "bottom")
 p3
-
+p1
 
 ## rejection order graph
 e2 <- round(optim_e / 3, digits = 3)
@@ -152,14 +157,10 @@ e3 <- round(optim_e / 1.5, digits = 3)
 e4 <- round(optim_e * 1.5, digits = 3)
 e5 <- round(optim_e * 3, digits = 3)
 
-e2_vij <- ComputeSimVij(phi_diffs, ij_list,
-                        epsilon = e2)
-e3_vij <- ComputeSimVij(phi_diffs, ij_list,
-                        epsilon = e3)
-e4_vij <- ComputeSimVij(phi_diffs, ij_list,
-                        epsilon = e4)
-e5_vij <- ComputeSimVij(phi_diffs, ij_list,
-                        epsilon = e5)
+e2_vij <- ComputeSimVij(phi_diffs, epsilon = e2)
+e3_vij <- ComputeSimVij(phi_diffs, epsilon = e3)
+e4_vij <- ComputeSimVij(phi_diffs, epsilon = e4)
+e5_vij <- ComputeSimVij(phi_diffs, epsilon = e5)
 
 optim_e_vij_order <- order(optim_e_vij, decreasing = F)
 e2_vij_order <- order(e2_vij[optim_e_vij_order], decreasing = F)
@@ -197,3 +198,74 @@ sim_vij_order_graph <- ggplot() +
                      labels = c("No Difference", "True Difference"),
                      values = c("FALSE" = "red", "TRUE" = "dodgerblue"))
 sim_vij_order_graph
+
+# compare to exact model
+phi_diffs2 <- readRDS(file.path(getwd(), "output", "US_exact_sample_sim",
+                                "phi_diffs.Rds"))
+optim2_e_vij <- ComputeSimVij(phi_diffs2, epsilon = optim_e)
+
+
+sim2_FDR_sensitivity <- data.table(
+  t = t_seq,
+  FDR = vapply(t_seq, function(target_t) FDR_estimate(optim2_e_vij, target_t, e = 0), numeric(1)),
+  true_sensitivity = vapply(t_seq, function(target_t) {
+    decisions <- logical(nrow(ij_list))
+    decisions[optim2_e_vij >= target_t] <- TRUE
+    ComputeClassificationMetrics(decisions, true_diff)["sensitivity"]
+  }, numeric(1))
+)
+sim_FDR_sensitivity <- data.table(
+  t = t_seq,
+  FDR = vapply(t_seq, function(target_t) FDR_estimate(optim_e_vij, target_t, e = 0), numeric(1)),
+  true_sensitivity = vapply(t_seq, function(target_t) {
+    decisions <- logical(nrow(ij_list))
+    decisions[optim_e_vij >= target_t] <- TRUE
+    ComputeClassificationMetrics(decisions, true_diff)["sensitivity"]
+  }, numeric(1))
+)
+
+FDR_sensitivity_plot <- ggplot() +
+  geom_line(data = sim_FDR_sensitivity, aes(x = true_sensitivity, y = FDR,
+                                            col = "blue")) +
+  geom_line(data = sim2_FDR_sensitivity, aes(x = true_sensitivity, y = FDR,
+                                             col = "red")) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  labs(x = "True Sensitivity", y = "Bayesian FDR") +
+  scale_color_manual(name = "Model",
+                     labels = c(paste0("rho ~ PC(", lambda_rho, ")"), "rho = 0.93"),
+                       values = c("blue" = "blue", "red" = "red"))
+FDR_sensitivity_plot
+
+optim_e_vij_hist <- ggplot() +
+  geom_histogram(aes(x = optim_e_vij), fill = "dodgerblue", color = "black",
+                 breaks = seq(0, 1, by = .05)) +
+  lims(x = c(0, 1)) +
+  labs(x = paste0("v_ij(", round(optim_e, digits = 3), ")")) +
+  theme_minimal()
+rho_hist <- ggplot() +
+  geom_histogram(aes(x = rho_sim), fill = "dodgerblue", color = "black",
+                 breaks = seq(0, 1, by = .05)) +
+  lims(x = c(0, 1)) +
+  labs(x = paste0("rho")) +
+  theme_minimal()
+ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "vij_order_graph.png"),
+       width = 8, height = 5.5, units = "in", sim_vij_order_graph)
+ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "FDR_sensitivity_plot.png"),
+       width = 4.5, height = 6, units = "in", FDR_sensitivity_plot)
+ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "optim_e_vij_hist.png"),
+       width = 6, height = 4.5, units = "in", optim_e_vij_hist)
+ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "rho_hist.png"),
+       width = 6, height = 4.5, units = "in", rho_hist)
+par(mfrow = c(1, 1))
+png(file.path(getwd(), "output", "US_gibbs_sample_sim", "auc.png"),
+    width = 4.5, height = 6, units = "in", res = 120)
+plot(pROC::roc(as.vector(true_diff), as.vector(optim_e_vij)), col = "blue",
+     print.auc = TRUE)
+plot(pROC::roc(as.vector(true_diff), as.vector(optim2_e_vij)), col = "red",
+     add = TRUE, print.auc = TRUE, print.auc.x = 0.5, print.auc.y = 0.45)
+legend("bottomright", col = c("blue", "red"), lty = 1,
+       legend = c(paste0("rho ~ PC(", lambda_rho, ")"), "Rho = 0.93"))
+dev.off()
+
+
