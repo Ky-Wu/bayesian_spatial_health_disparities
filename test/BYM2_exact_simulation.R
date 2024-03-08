@@ -10,7 +10,6 @@ library(Rcpp)
 library(RcppArmadillo)
 library(ggplot2)
 rm(list = ls())
-set.seed(122)
 
 # Data generation
 source(file.path(getwd(), "src", "R", "simulation", "US_data_generation.R"))
@@ -20,14 +19,15 @@ source(file.path(getwd(), "src", "R", "eps_loss_FDR.R"))
 source(file.path(getwd(), "src", "R", "vij_computation.R"))
 # Exact sampling
 sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2ExactSampling.cpp"))
-
-BYM2Sampler <- new(BYM2ExactSampler, X, y, Q_scaled, rho)
+set.seed(122)
+model_rho <- rho
+BYM2Sampler <- new(BYM2ExactSampler, X, y, Q_scaled, model_rho)
 # Set priors
-a_0 <- 2.1
-b_0 <- 0.1
+a_sigma <- 0.1
+b_sigma <- 0.1
 M_0inv <- diag(rep(1e-4, p))
 m_0 <- rep(0, p)
-BYM2Sampler$SetPriors(M_0inv, m_0, a_0, b_0)
+BYM2Sampler$SetPriors(M_0inv, m_0, a_sigma, b_sigma)
 
 n_sim <- 10000
 system.time({
@@ -38,12 +38,12 @@ beta_sim <- exact_samps$beta
 gamma_sim <- exact_samps$gamma
 sigma2_sim <- exact_samps$sigma2
 YFit_sim <- exact_samps$YFit
-denom <- sqrt(sigma2_sim * rho)
+denom <- sqrt(sigma2_sim * model_rho)
 phi_sim <- apply(gamma_sim, MARGIN = 2, function(x) x / denom)
 rm(denom)
 
 
-phi_diffs <- BYM2_StdDiff(phi_sim, rep(rho, n_sim), Q_scaled, X, ij_list)
+phi_diffs <- BYM2_StdDiff(phi_sim, rep(model_rho, n_sim), Q_scaled, X, ij_list)
 phi_truediffs <- BYM2_StdDiff(matrix(phi, nrow = 1),
                               rho, Q_scaled, X, ij_list)
 # Maximize entropy of posterior distribution with respect to epsilon
@@ -55,10 +55,11 @@ eps_optim <- optim(median(abs(phi_diffs)), function(e) {
 optim_e <- eps_optim$par
 eps_optim
 
+# number of true disparities at e_CE level
+sum(abs(phi_truediffs) > optim_e)
 
 # select cutoff t in d(i, j) = I(v_ij > t) to control FDR and minimize FNR
-optim_e_vij <- ComputeSimVij(phi_diffs,
-                             epsilon = optim_e)
+optim_e_vij <- ComputeSimVij(phi_diffs, epsilon = optim_e)
 
 eta <- .10
 t_seq_length <- 10000
@@ -127,24 +128,22 @@ x1 <- cbind("y" = y, st_as_sf(county_sp))
 x2 <- cbind("phi" = phi, st_as_sf(county_sp))
 yfit_pmeans <- colMeans(YFit_sim)
 yfit_pmeans_df <- cbind(y_pmeans = yfit_pmeans, st_as_sf(county_sp))
-p1 <- ggplot() +
+
+y_map <- ggplot() +
   geom_sf(data = x1, aes(fill = y)) +
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(name = "Simulated Y") +
   theme_minimal() +
   theme(legend.position = "bottom")
-p2 <- ggplot() +
+phi_map <- ggplot() +
   geom_sf(data = x2, aes(fill = phi)) +
   scale_fill_viridis_c() +
   theme_minimal() +
   theme(legend.position = "bottom")
-p3 <- ggplot() +
+pmeans_map <- ggplot() +
   geom_sf(data = yfit_pmeans_df, aes(fill = y_pmeans)) +
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(name = "Y Posterior Mean") +
   theme_minimal() +
   theme(legend.position = "bottom")
-p1
-p2
-p3
 
 eps_seq <- seq(0.1, optim_e * 4, length.out = 100)
 eps_seq <- seq(0.001, max(abs(phi_diffs)) / 2, length.out = 100)
@@ -199,17 +198,19 @@ optim_e_vij_hist <- ggplot() +
   theme_minimal()
 
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_data.png"),
-       width = 6, height = 4.5, units = "in", p1)
+       width = 6, height = 4.5, units = "in", y_map, dpi = 900)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_phi.png"),
-       width = 6, height = 4.5, units = "in", p2)
+       width = 6, height = 4.5, units = "in", phi_map, dpi = 900)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_yfitpmean.png"),
-       width = 6, height = 4.5, units = "in", p3)
+       width = 6, height = 4.5, units = "in", pmeans_map, dpi = 900)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "vij_order.png"),
-       width = 8, height = 5.5, units = "in", sim_vij_order_graph)
+       width = 8, height = 5.5, units = "in", sim_vij_order_graph, dpi = 900)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "eps_loss_graph.png"),
-       width = 6, height = 4.5, units = "in", eps_loss_graph)
+       width = 6, height = 4.5, units = "in", eps_loss_graph, dpi = 900)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "optim_e_vij_hist.png"),
-       width = 6, height = 4.5, units = "in", optim_e_vij_hist)
+       width = 6, height = 4.5, units = "in", optim_e_vij_hist, dpi = 900)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "FDRFNR_eps_graph.png"),
-       width = 6, height = 4.5, units = "in", FDRFNR_eps_graph)
+       width = 6, height = 4.5, units = "in", FDRFNR_eps_graph, dpi = 900)
 
+saveRDS(phi_diffs, file.path(getwd(), "output", "US_exact_sample_sim",
+                             "phi_diffs.Rds"))
