@@ -19,7 +19,7 @@ sourceCpp(file.path(getwd(), "src", "rcpp", "epsilonBinarySearch.cpp"))
 # Helper functions for epsilon-loss bayesian FDR control procedure
 source(file.path(getwd(), "src", "R", "eps_loss_FDR.R"))
 # Read in and setup lung data
-source(file.path(getwd(), "src", "R", "RDA", "data_setup.R"))
+source(file.path(getwd(), "src", "R", "RDA", "CA_data_setup.R"))
 
 plot(county_sf[, c("young", "old", "highschool", "poverty", "unemployed",
                    "black_percent", "male_percent", "uninsured_percent",
