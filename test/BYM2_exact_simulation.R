@@ -41,37 +41,26 @@ YFit_sim <- exact_samps$YFit
 denom <- sqrt(sigma2_sim * rho)
 phi_sim <- apply(gamma_sim, MARGIN = 2, function(x) x / denom)
 rm(denom)
-plot(density(phi_sim[, 105]))
-hist(phi_sim[, 20])
+
 
 phi_diffs <- BYM2_StdDiff(phi_sim, rep(rho, n_sim), Q_scaled, X, ij_list)
-dev.off()
-par(mfrow = c(2,2))
-plot(density(abs(phi_diffs[,5])), xlim = c(0, 6))
-plot(density(abs(phi_diffs[,15])), xlim = c(0, 6))
-plot(density(abs(phi_diffs[,55])), xlim = c(0, 6))
-plot(density(abs(phi_diffs[,130])), xlim = c(0, 6))
-
 phi_truediffs <- BYM2_StdDiff(matrix(phi, nrow = 1),
                               rho, Q_scaled, X, ij_list)
-
 # Maximize entropy of posterior distribution with respect to epsilon
 loss_function <- function(V, epsilon) -Entropy(V)
 eps_optim <- optim(median(abs(phi_diffs)), function(e) {
-  e_vij <- ComputeSimVij(phi_diffs, ij_list, epsilon = e)
+  e_vij <- ComputeSimVij(phi_diffs, epsilon = e)
   loss_function(e_vij, epsilon = e)
 }, method = "Brent", lower = 0.0001, upper = 5.0)
 optim_e <- eps_optim$par
 eps_optim
 
-true_phi_diffs <- ComputeSimSTDDifferences(matrix(phi, ncol = 1),
-                                           Sigma_scaled,
-                                           ij_list = ij_list)
-mean(abs(true_phi_diffs) > optim_e)
+
 # select cutoff t in d(i, j) = I(v_ij > t) to control FDR and minimize FNR
-optim_e_vij <- ComputeSimVij(phi_diffs, ij_list,
+optim_e_vij <- ComputeSimVij(phi_diffs,
                              epsilon = optim_e)
-eta <- .05
+
+eta <- .10
 t_seq_length <- 10000
 t_seq <- seq(0, max(optim_e_vij) - .001, length.out = t_seq_length)
 t_FDR <- vapply(t_seq, function(t) FDR_estimate(optim_e_vij, t, e = 0), numeric(1))
@@ -84,24 +73,17 @@ e3 <- round(optim_e / 1.5, digits = 3)
 e4 <- round(optim_e * 1.5, digits = 3)
 e5 <- round(optim_e * 3, digits = 3)
 
-e2_vij <- ComputeSimVij(phi_diffs, ij_list,
-                        epsilon = e2)
-e3_vij <- ComputeSimVij(phi_diffs, ij_list,
-                        epsilon = e3)
-e4_vij <- ComputeSimVij(phi_diffs, ij_list,
-                        epsilon = e4)
-e5_vij <- ComputeSimVij(phi_diffs, ij_list,
-                        epsilon = e5)
+e2_vij <- ComputeSimVij(phi_diffs, epsilon = e2)
+e3_vij <- ComputeSimVij(phi_diffs, epsilon = e3)
+e4_vij <- ComputeSimVij(phi_diffs, epsilon = e4)
+e5_vij <- ComputeSimVij(phi_diffs, epsilon = e5)
 
 optim_e_vij_order <- order(optim_e_vij, decreasing = F)
 e2_vij_order <- order(e2_vij[optim_e_vij_order], decreasing = F)
 e3_vij_order <- order(e3_vij[optim_e_vij_order], decreasing = F)
 e4_vij_order <- order(e4_vij[optim_e_vij_order], decreasing = F)
 e5_vij_order <- order(e5_vij[optim_e_vij_order], decreasing = F)
-true_diff <- (abs(true_phi_diffs) > optim_e)
-# true_diff <- vapply(seq_len(nrow(ij_list)), function(r) {
-#   phi[ij_list[r,]$i] != phi[ij_list[r,]$j]
-# }, logical(1))
+true_diff <- (abs(phi_truediffs) > optim_e)
 rejection_path <- data.table(
   optim_e_vij = seq_along(optim_e_vij),
   e2_vij_order = e2_vij_order,
@@ -164,6 +146,58 @@ p1
 p2
 p3
 
+eps_seq <- seq(0.1, optim_e * 4, length.out = 100)
+eps_seq <- seq(0.001, max(abs(phi_diffs)) / 2, length.out = 100)
+sim_vij <- ComputeSimVij(phi_diffs, epsilon = eps_seq)
+sim_loss <- loss_function(sim_vij, epsilon = eps_seq)
+eps_loss_graph <- ggplot() +
+  geom_line(data = data.frame(sim_loss = sim_loss, epsilon = eps_seq),
+            aes(x = epsilon, y = sim_loss), color = "dodgerblue") +
+  labs(x = "Epsilon", y = "loss", title = "",
+       subtitle = paste0("Optimal Epsilon = ", round(optim_e, digits = 4))) +
+  geom_vline(xintercept = optim_e, lwd = 0.8, linetype = "dotted",
+             color = "red") +
+  theme_minimal()
+
+
+
+eps_seq <- c(e2, e3, optim_e, e4, e5)
+e_vijs <- cbind(e2_vij, e3_vij, optim_e_vij, e4_vij, e5_vij)
+FDR_FNR_curves <- lapply(seq_len(ncol(e_vijs)), function(i) {
+  v <- e_vijs[, i]
+  FDR <- vapply(t_seq, function(t) FDR_estimate(v, t, e = 0), numeric(1))
+  FNR <- vapply(t_seq, function(t) FNR_estimate(v, t, e = 0.1), numeric(1))
+  sensitivity <-
+    data.table(epsilon = round(eps_seq[i], digits = 3),
+               t = t_seq,
+               FDR = FDR,
+               FNR = FNR)
+}) %>% do.call(rbind, .)
+FDR_FNR_curves[, epsilon := factor(epsilon, levels = sort(unique(epsilon)),
+                                   ordered = T)]
+FDRt_graph <- ggplot() +
+  geom_line(data = FDR_FNR_curves, aes(x = t, y = FDR, group = epsilon,
+                                        color = epsilon)) +
+  labs(x = "t", y = "Bayesian FDR") +
+  theme_minimal()
+FNRt_graph <- ggplot() +
+  geom_line(data = FDR_FNR_curves, aes(x = t, y = FNR, group = epsilon,
+                                        color = epsilon)) +
+  labs(x = "t", y = "Bayesian FNR") +
+  theme_minimal()
+FDRFNR_eps_graph <- ggplot() +
+  geom_line(data = FDR_FNR_curves, aes(x = FNR, y = FDR, group = epsilon,
+                                        color = epsilon)) +
+  labs(x = "Bayesian FNR", y = "Bayesian FDR") +
+  theme_minimal()
+
+optim_e_vij_hist <- ggplot() +
+  geom_histogram(aes(x = optim_e_vij), fill = "dodgerblue", color = "black",
+                 breaks = seq(0, 1, by = .05)) +
+  lims(x = c(0, 1)) +
+  labs(x = paste0("v_ij(", round(optim_e, digits = 3), ")")) +
+  theme_minimal()
+
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_data.png"),
        width = 6, height = 4.5, units = "in", p1)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_phi.png"),
@@ -171,5 +205,11 @@ ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_phi.png"),
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_yfitpmean.png"),
        width = 6, height = 4.5, units = "in", p3)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "vij_order.png"),
-       width = 6, height = 4.5, units = "in", sim_vij_order_graph)
+       width = 8, height = 5.5, units = "in", sim_vij_order_graph)
+ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "eps_loss_graph.png"),
+       width = 6, height = 4.5, units = "in", eps_loss_graph)
+ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "optim_e_vij_hist.png"),
+       width = 6, height = 4.5, units = "in", optim_e_vij_hist)
+ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "FDRFNR_eps_graph.png"),
+       width = 6, height = 4.5, units = "in", FDRFNR_eps_graph)
 
