@@ -92,7 +92,7 @@ ComputeClassificationMetrics(results$decision, eps_differences)
 # frequentist: low p-value => reject H_0 => beta_i != beta_j
 # bayesian procedure: high v_ij => "reject" |beta_i - beta_j| <= epsilon => declare |beta_i - beta_j| > epsilon
 freq_p
-bayes_vij <- ComputeSimVij(sim_decisions$sim$std_differences, ij_list_s,
+bayes_vij <- ComputeSimVij(sim_decisions$sim$std_differences,
                            epsilon = optim_e)
 #bayes_vij <- as.vector(sim_decisions$optim_params$optim_e_vij)
 bayes_vij_order <- order(bayes_vij, decreasing = F)
@@ -105,7 +105,7 @@ rejection_path <- data.frame(
 )
 
 e_2 <- optim_e * 4
-bayes_vij2 <- ComputeSimVij(sim_decisions$sim$std_differences, ij_list_s,
+bayes_vij2 <- ComputeSimVij(sim_decisions$sim$std_differences,
                            epsilon = e_2)
 #bayes_vij <- as.vector(sim_decisions$optim_params$optim_e_vij)
 bayes_vij2_order <- order(bayes_vij2, decreasing = F)
@@ -143,7 +143,7 @@ with(sim_decisions, {
 beta_sim <- sim_decisions$sim$beta_sim
 beta_diff <- ComputeSimSTDDifferences(beta_sim, M1, ij_list = ij_list_s)
 eps_seq <- c(seq(0, max(beta_diff) / 2, length.out = 200), optim_e)
-V <- ComputeSimVij(beta_diff, ij_list_s, epsilon = eps_seq)
+V <- ComputeSimVij(beta_diff, epsilon = eps_seq)
 t_seq <- seq(0, 1, length = 1000)
 FDRFNR_curves <- ComputeFDRFNRCurves(V, t_seq, eps_seq)
 FDRFNR_curves_s <- FDRFNR_curves[with(FDRFNR_curves,{epsilon %in%
