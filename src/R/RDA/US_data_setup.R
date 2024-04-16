@@ -55,7 +55,7 @@ cancer[, is_county := county_fips >= 1000]
 cancer <- cancer[!is.na(county_fips) & is_county & county_fips %in% county_sf$fips,]
 
 has_data_sf <- cbind(county_sf, has_data = county_sf$fips %in% cancer$county_fips)
-plot(has_data_sf[, "has_data"])
+#plot(has_data_sf[, "has_data"])
 
 smoking <- fread(file.path(getwd(), "data", "US_data", "IHME_data",
                            "IHME_US_COUNTY_TOTAL_AND_DAILY_SMOKING_PREVALENCE_1996_2012.csv"))
@@ -74,7 +74,7 @@ cancer_smoking_sf <- merge(county_sf, cancer_smoking,
 cancer_smoking <- st_drop_geometry(cancer_smoking_sf)
 smoking[, county_name := str_match(county, "^(.+)\\s(County|City|Parish)")[,2]]
 has_data_sf <- cbind(has_data = county_sf$fips %in% cancer_smoking_sf$fips, county_sf)
-plot(has_data_sf[, "has_data"], main = "Lung Cancer Mortality and Smoking Data Coverage")
+# plot(has_data_sf[, "has_data"], main = "Lung Cancer Mortality and Smoking Data Coverage")
 
 # absolutely make sure data regions are connected by subsetting to largest piece
 # tol <- .01
@@ -106,7 +106,7 @@ ij_list <- ij_list[ij_list$i < ij_list$j, ]
 rownames(ij_list) <- NULL
 
 rm(cancer, smoking, county_poly,
-   county_names, county_state, county_sp, county_df, has_data_sf,
+   county_names, county_state, county_sp, county_df,
    confintCols, mortality_col_names, no_neighbors, extractRate)
 rm(W, D, alpha, Sigma, Q_cholR, Q)
 gc()
