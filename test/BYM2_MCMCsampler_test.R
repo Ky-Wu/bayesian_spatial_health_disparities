@@ -60,29 +60,25 @@ YFit_sim <- samps$YFit
 
 hist(rho_sim)
 hist(sigma2_sim)
-
-plot(rho_sim, type = "l")
-plot(sigma2_sim, type = "l")
 hist(beta_sim[,1])
 hist(beta_sim[,2])
+# trace plots for rho and sigma2
+plot(rho_sim, type = "l")
+plot(sigma2_sim, type = "l")
 
 phi_sim <- apply(gamma_sim, MARGIN = 2, function(x) {
   x / sqrt(sigma2_sim * rho_sim)
 })
 
 phi_diffs <- BYM2_StdDiff(phi_sim, rho_sim, Q_scaled, X, ij_list)
-# phi_diffs <- vapply(seq_len(k), function(pair_indx) {
-#   i <- ij_list[pair_indx,]$i
-#   j <- ij_list[pair_indx,]$j
-#   sim_phi[,i] - sim_phi[,j]
-# }, numeric(n_sim))
+# look at some differences
 dev.off()
 par(mfrow = c(2,2))
 plot(density(abs(phi_diffs[,5])), xlim = c(0, 6))
 plot(density(abs(phi_diffs[,15])), xlim = c(0, 6))
 plot(density(abs(phi_diffs[,55])), xlim = c(0, 6))
 plot(density(abs(phi_diffs[,130])), xlim = c(0, 6))
-
+# compute the true differences
 phi_truediffs <- BYM2_StdDiff(matrix(phi, nrow = 1),
                               rho, Q_scaled, X, ij_list)
 
@@ -123,29 +119,19 @@ rej_indx <- optim_e_vij_order[optim_e_vij_order %in%
 detected_borders <- ij_list[rej_indx,]
 node1_all <- county_sf[detected_borders$i,]
 node2_all <- county_sf[detected_borders$j,]
-intersections <- lapply(seq_len(sum(decisions)), function(i) {
-  node1 <- node1_all[i,]
-  node2 <- node2_all[i,]
-  suppressMessages(st_intersection(st_buffer(node1, 0.0003),
-                                   st_buffer(node2, 0.0003)))
 
-}) %>%
-  do.call(rbind, .)
-intersections$rank <- rev(seq_len(sum(decisions)))
-
+### DATA MAPS
 x1 <- cbind("y" = y, county_sf)
 yfit_pmeans <- colMeans(YFit_sim)
 yfit_pmeans_df <- cbind(y_pmeans = yfit_pmeans, county_sf)
 p1 <- ggplot() +
   geom_sf(data = x1, aes(fill = y)) +
   scale_fill_viridis_c() +
-  #geom_sf(data = intersections, col = "red", alpha = 0) +
   theme_minimal() +
   theme(legend.position = "bottom")
 p3 <- ggplot() +
   geom_sf(data = yfit_pmeans_df, aes(fill = y_pmeans)) +
   scale_fill_viridis_c() +
-  #geom_sf(data = intersections, col = "red", alpha = 0) +
   theme_minimal() +
   theme(legend.position = "bottom")
 p3
@@ -199,11 +185,10 @@ sim_vij_order_graph <- ggplot() +
                      values = c("FALSE" = "red", "TRUE" = "dodgerblue"))
 sim_vij_order_graph
 
-# compare to exact model
+# Bayesian FDR vs. Sensitivity graphs: comparison to exact model
 phi_diffs2 <- readRDS(file.path(getwd(), "output", "US_exact_sample_sim",
                                 "phi_diffs.Rds"))
 optim2_e_vij <- ComputeSimVij(phi_diffs2, epsilon = optim_e)
-
 
 sim2_FDR_sensitivity <- data.table(
   t = t_seq,
@@ -237,18 +222,21 @@ FDR_sensitivity_plot <- ggplot() +
                        values = c("blue" = "blue", "red" = "red"))
 FDR_sensitivity_plot
 
+# Histogram of difference probabilities
 optim_e_vij_hist <- ggplot() +
   geom_histogram(aes(x = optim_e_vij), fill = "dodgerblue", color = "black",
                  breaks = seq(0, 1, by = .05)) +
   lims(x = c(0, 1)) +
   labs(x = paste0("v_ij(", round(optim_e, digits = 3), ")")) +
   theme_minimal()
+# Histogram of posterior samples of rho
 rho_hist <- ggplot() +
   geom_histogram(aes(x = rho_sim), fill = "dodgerblue", color = "black",
                  breaks = seq(0, 1, by = .05)) +
   lims(x = c(0, 1)) +
   labs(x = paste0("rho")) +
   theme_minimal()
+
 ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "vij_order_graph.png"),
        width = 8, height = 5.5, units = "in", sim_vij_order_graph)
 ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "FDR_sensitivity_plot.png"),
