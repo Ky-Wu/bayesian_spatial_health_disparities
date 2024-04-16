@@ -17,7 +17,7 @@ GeneralLoss <- function(V, epsilon, g, h) {
   loss
 }
 
-Entropy <- function(V) {
+ConditionalEntropy <- function(V) {
   vapply(seq_len(ncol(V)), function(i) {
     v <- V[, i]
     entropy <- ifelse(v == 0 | v == 1, 0.0, -v * log(v) - (1 - v) * log(1 - v))
