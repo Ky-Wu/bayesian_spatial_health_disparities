@@ -23,7 +23,6 @@ source(file.path(getwd(), "src", "R", "RDA", "US_data_setup.R"))
 # Exact sampling and Gibbs sampling
 Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2ExactSampling.cpp"))
 Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2_flatbeta_MCMC.cpp"))
-Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "NGRegression.cpp"))
 
 X <- cbind(1, cancer_smoking_sf$total_mean_smoking)
 y <- cancer_smoking_sf$mortality2014
