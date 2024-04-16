@@ -253,6 +253,8 @@ ggsave(file.path(getwd(), "output", "RDA", "US_data", "vij_order_graph.png"),
        width = 8, height = 5.5, units = "in", vij_order_graph, dpi = 900)
 ggsave(file.path(getwd(), "output", "RDA", "US_data", "lung_map.png"),
        width = 8, height = 4.5, units = "in", lung_map, dpi = 900)
+ggsave(file.path(getwd(), "output", "RDA", "US_data", "smoking_map.png"),
+       width = 8, height = 4.5, units = "in", smoking_map, dpi = 900)
 ggsave(file.path(getwd(), "output", "RDA", "US_data", "yfit_pmeans_map.png"),
        width = 8, height = 4.5, units = "in", yfit_pmeans_map, dpi = 900)
 ggsave(file.path(getwd(), "output", "RDA", "US_data", "optim_e_vij_hist.png"),
