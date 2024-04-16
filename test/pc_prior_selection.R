@@ -43,20 +43,24 @@ set.seed(1130)
 alpha <- 2/3
 U <- 0.5
 l_seq <- seq(0.02, 0.05, by = .0015)
+# alpha = P(rho <= U)
 alphas <- vapply(l_seq, function(target_l) {
   mean(samplePCPrior(10000, Lambda, target_l) <= U)
 }, numeric(1))
+# select lambda such that
 min(l_seq[alphas >= alpha])
 
 # US lung mortality RDA selection of lambda_rho
 # Read in and setup lung + smoking data
 source(file.path(getwd(), "src", "R", "RDA", "US_data_setup.R"))
-Q_eigen <- eigen(Q_scaled)
-Lambda <- Q_eigen$values
-l_seq <- seq(0.02, 0.05, by = .0015)
+
+set.seed(1130)
 alpha <- 2/3
 U <- 0.5
+l_seq <- seq(0.02, 0.05, by = .0015)
+# alpha = P(rho <= U)
 alphas <- vapply(l_seq, function(target_l) {
   mean(samplePCPrior(10000, Lambda, target_l) <= U)
 }, numeric(1))
+# select lambda such that
 min(l_seq[alphas >= alpha])
