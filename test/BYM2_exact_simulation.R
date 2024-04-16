@@ -47,7 +47,7 @@ phi_diffs <- BYM2_StdDiff(phi_sim, rep(model_rho, n_sim), Q_scaled, X, ij_list)
 phi_truediffs <- BYM2_StdDiff(matrix(phi, nrow = 1),
                               rho, Q_scaled, X, ij_list)
 # Maximize entropy of posterior distribution with respect to epsilon
-loss_function <- function(V, epsilon) -Entropy(V)
+loss_function <- function(V, epsilon) -ConditionalEntropy(V)
 eps_optim <- optim(median(abs(phi_diffs)), function(e) {
   e_vij <- ComputeSimVij(phi_diffs, epsilon = e)
   loss_function(e_vij, epsilon = e)
@@ -157,8 +157,6 @@ eps_loss_graph <- ggplot() +
   geom_vline(xintercept = optim_e, lwd = 0.8, linetype = "dotted",
              color = "red") +
   theme_minimal()
-
-
 
 eps_seq <- c(e2, e3, optim_e, e4, e5)
 e_vijs <- cbind(e2_vij, e3_vij, optim_e_vij, e4_vij, e5_vij)
