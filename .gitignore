@@ -6,3 +6,6 @@
 *.Rproj
 .DS_Store
 rstudio/
+DIC_computation_check.R
+src/R/RDA/export_cancers.R
+data/US_data/four_cancer_data.csv
