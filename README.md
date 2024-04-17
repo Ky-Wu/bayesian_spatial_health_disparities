@@ -19,7 +19,7 @@ Mar. 2014. ISSN 1478-7954. doi: 10.1186/1478-7954-12-5.
 
 # Reproducing Figures
 
-We provide several R Markdown files that reproduce the results and figures in the simulation examples and real data analysis example in the manuscript. For the simulation and real data analysis files, we describe the data used, the model utilized, and the corresponding section in the manuscript where the figures appear.
+We provide several R Markdown files that reproduce the results and figures in the simulation examples and real data analysis example in the manuscript. For the simulation and real data analysis files, we describe the data used, the model utilized, and the corresponding section in the manuscript where the figures appear. Simulated data is generated according to a specified seed in the file `src/R/simulation/US_data_generation.R`, which is called by the Rmd files.
 
 1. `test/Rmd/pc_prior_selection.Rmd`
    - Selection of hyperparameter $\lambda_{\rho}$ for penalized complexity prior on $\rho$ for simulation example and real data analysis
@@ -35,4 +35,5 @@ We provide several R Markdown files that reproduce the results and figures in th
    - Lung cancer mortality rate estimates on US county level in 2014
    - BYM2 model with penalized complexity prior on $\rho$ 
    - Section 5
+   - Data setup in `src/R/RDA/US_data_setup.R`
 
