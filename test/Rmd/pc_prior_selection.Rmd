@@ -1,7 +1,7 @@
 ---
 title: "Selection of Lambda in Rho Prior"
 author: "Kyle Lin Wu"
-bibliography: "../bibtex/epsilon_spatial_differences.bib"
+bibliography: "../../bibtex/epsilon_spatial_differences.bib"
 output: 
   pdf_document:
     number_sections: true
@@ -9,7 +9,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-knitr::opts_knit$set(root.dir = file.path(getwd(), ".."))
+knitr::opts_knit$set(root.dir = file.path(getwd(), "..", ".."))
 ```
 
 In this RMD file, we select an appropriate value for the $\lambda$ hyperparameter of the penalized complexity prior for both the simulation example in Section 4 and the data analysis in Section 5. The penalized complexity prior was introduced in @simpsonPenalisingModelComponent2017, and we place this prior on $\rho$, which controls the spatial proportion of total variance in the BYM2 model. We select $\lambda$ from a dense sequence such that $\mathbb{P}\left(\rho \leq \frac{1}{2}\right) \approx \frac{2}{3}$.
