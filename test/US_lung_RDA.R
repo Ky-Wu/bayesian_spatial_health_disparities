@@ -99,17 +99,16 @@ plot(density(abs(phi_diffs[,55])), xlim = c(0, 6))
 plot(density(abs(phi_diffs[,130])), xlim = c(0, 6))
 
 # Maximize conditional entropy with respect to epsilon
-loss_function <- function(V, epsilon) -Entropy(V)
+loss_function <- function(V, epsilon) -ConditionalEntropy(V)
 eps_optim <- optim(median(abs(phi_diffs)), function(e) {
   e_vij <- ComputeSimVij(phi_diffs, epsilon = e)
   loss_function(e_vij, epsilon = e)
 }, method = "Brent", lower = 0.0001, upper = 5.0)
 optim_e <- eps_optim$par
 
-# select cutoff t in d(i, j) = I(v_ij > t) to control FDR and minimize FNR
 optim_e_vij <- ComputeSimVij(phi_diffs,
                              epsilon = optim_e)
-optim_e_vij_order <- order(optim_e_vij, decreasing = F)
+# select cutoff t in d(i, j) = I(v_ij > t) to control FDR and minimize FNR
 eta <- .20
 t_seq_length <- 10000
 t_seq <- seq(0, max(optim_e_vij) - .001, length.out = t_seq_length)
@@ -126,6 +125,8 @@ print(paste0("Optimal epsilon: ", optim_e))
 print(paste0("Optimal t: ", optim_t))
 mean(decisions)
 
+## rejection order graph
+optim_e_vij_order <- order(optim_e_vij, decreasing = F)
 rej_indx <- optim_e_vij_order[optim_e_vij_order %in%
                                 which(optim_e_vij >= optim_t)]
 detected_borders <- ij_list[rej_indx,]
@@ -141,7 +142,6 @@ intersections <- lapply(seq_len(sum(decisions)), function(i) {
   do.call(rbind, .)
 intersections$rank <- rev(seq_len(sum(decisions)))
 
-## rejection order graph
 e2 <- round(optim_e / 3, digits = 3)
 e3 <- round(optim_e / 1.5, digits = 3)
 e4 <- round(optim_e * 1.5, digits = 3)
@@ -294,7 +294,7 @@ disparity_df <- data.table(
   `$v_k(\\epsilon_{CE})$` = optim_e_vij[decisions][rankings]
 )
 print(xtable(disparity_df, type = "latex", digits = 3,
-             caption = "List of classified spatial disparities.",
+             caption = "Reported spatial disparities in lung cancer mortality between neighboring US counties.",
              label = "tab:RDA_disparities_table", align = c("c", "c", "c", "c")),
       type = "latex", sanitize.text.function = function(x) {x},
       include.rownames = TRUE, tabular.environment = "longtable",
