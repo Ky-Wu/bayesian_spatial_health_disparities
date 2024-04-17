@@ -19,20 +19,20 @@ Mar. 2014. ISSN 1478-7954. doi: 10.1186/1478-7954-12-5.
 
 # Reproducing Figures
 
-We provide several R Markdown files that reproduce the results and figures in the simulation examples and real data analysis example in the manuscript. For the simulation and real data analysis files, we describe the data used, the type of model utilized, and the corresponding section in the manuscript where the figures appear.
+We provide several R Markdown files that reproduce the results and figures in the simulation examples and real data analysis example in the manuscript. For the simulation and real data analysis files, we describe the data used, the model utilized, and the corresponding section in the manuscript where the figures appear.
 
 1. `test/Rmd/pc_prior_selection.Rmd`
    - Selection of hyperparameter $\lambda_{\rho}$ for penalized complexity prior on $\rho$ for simulation example and real data analysis
 2. `test/Rmd/BYM2_exact_simulation.Rmd`
    - Simulation over map of US counties
-   - Detecting spatial disparities under an exact conjugate model
+   - Exact conjugate BYM2 model
    - Section 4.1
 3. `test/Rmd/BYM2_MCMCsampler_test.Rmd`
    - Simulation over map of US counties
-   - Detecting spatial disparities under a BYM2 model with penalized complexity prior on $\rho$ 
+   - BYM2 model with penalized complexity prior on $\rho$ 
    - Section 4.2
 4. `test/Rmd/US_lung_RDA.Rmd`
    - Lung cancer mortality rate estimates on US county level in 2014
-   - Detecting spatial disparities under a BYM2 model with penalized complexity prior on $\rho$ 
+   - BYM2 model with penalized complexity prior on $\rho$ 
    - Section 5
 
