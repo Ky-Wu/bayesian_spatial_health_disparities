@@ -57,12 +57,11 @@ SimDecisions <- function(X, beta, sigma2, loss_function, eta, n_sim,
                                  Y = Y, ij_list = ij_list)
   # Compute v_ij = P(|beta_i - beta_j| > epsilon | y)
   eps_optim <- optim(median(sim$std_differences), function(e) {
-    e_vij <- ComputeSimVij(sim$std_differences, sim$ij_list, epsilon = e)
+    e_vij <- ComputeSimVij(sim$std_differences, epsilon = e)
     loss_function(e_vij, epsilon = e)
   }, method = "Brent", lower = 0, upper = max(abs(sim$std_differences)))
   optim_e <- eps_optim$par
-  optim_e_vij <- ComputeSimVij(sim$std_differences, sim$ij_list,
-                               epsilon = eps_optim$par)
+  optim_e_vij <- ComputeSimVij(sim$std_differences, epsilon = eps_optim$par)
   # select cutoff t in d(i, j) = I(v_ij > t) to control FDR and minimize FNR
   t_seq <- seq(0, max(optim_e_vij) - .001, length.out = t_seq_length)
   t_FDR <- vapply(t_seq, function(t) FDR_estimate(optim_e_vij, t), numeric(1))
