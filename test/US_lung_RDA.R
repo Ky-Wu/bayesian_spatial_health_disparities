@@ -109,7 +109,7 @@ optim_e <- eps_optim$par
 optim_e_vij <- ComputeSimVij(phi_diffs,
                              epsilon = optim_e)
 # select cutoff t in d(i, j) = I(v_ij > t) to control FDR and minimize FNR
-eta <- .20
+eta <- .05
 t_seq_length <- 10000
 t_seq <- seq(0, max(optim_e_vij) - .001, length.out = t_seq_length)
 t_FDR <- vapply(t_seq, function(t) FDR_estimate(optim_e_vij, t, e = 0), numeric(1))
@@ -272,15 +272,16 @@ params_summary <- apply(params_sim, MARGIN = 2, function(x) {
 round_digits <- 3
 params_summary[, `:=`(
   Parameter = c("$\\beta_0$", "$\\beta_1$", "$\\sigma^2$", "$\\rho$"),
+  Description = c("Intercept", "Smoking Prevalence", "Total Variance", "Spatial Proportion of Variance"),
   `Mean` = round(mean, digits = round_digits),
   `95\\% Credible Interval` = paste0("(", round(lower, digits = round_digits), ", ",
                     round(upper, digits = round_digits), ")")
 )]
-params_summary <- params_summary[, .(Parameter, `Mean`, `95\\% Credible Interval`)]
+params_summary <- params_summary[, .(Parameter, Description, `Mean`, `95\\% Credible Interval`)]
 rownames(params_summary) <- NULL
 print(xtable(params_summary, type = "latex",
              caption = "Posterior summaries of non-spatial effect parameters.",
-             label = "tab:RDA_post_summaries", align = c("c", "c", "c", "c")),
+             label = "tab:RDA_post_summaries", align = c("c", "c", "c", "c", "c")),
       type = "latex", sanitize.text.function = function(x) {x},
       include.rownames = FALSE,
       file = file.path(getwd(), "output", "RDA", "US_data", "params_summary.tex"))
