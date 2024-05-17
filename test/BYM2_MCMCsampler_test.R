@@ -9,7 +9,6 @@ library(Rcpp)
 library(RcppArmadillo)
 library(ggplot2)
 rm(list = ls())
-set.seed(122)
 
 # Data generation
 source(file.path(getwd(), "src", "R", "simulation", "US_data_generation.R"))
@@ -21,7 +20,7 @@ source(file.path(getwd(), "src", "R", "vij_computation.R"))
 Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2_flatbeta_MCMC.cpp"))
 # Fixed Rho Exact sampling
 Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2ExactSampling.cpp"))
-
+set.seed(51624)
 # Priors
 a_sigma <- 0.1
 b_sigma <- 0.1
@@ -40,7 +39,7 @@ BYM2Sampler$setPriors(a_sigma, b_sigma, rho_prior_type = "pc",
 BYM2Sampler$initOLS()
 
 warm_up_cycles <- 100
-for(j in seq_len(warm_up_cycles)) {
+for (j in seq_len(warm_up_cycles)) {
   print(paste0(j, "/", warm_up_cycles))
   print(paste0("current rho: ", BYM2Sampler$rho))
   print(paste0("current sigma2: ", BYM2Sampler$sigma2))
@@ -83,7 +82,7 @@ phi_truediffs <- BYM2_StdDiff(matrix(phi, nrow = 1),
                               rho, Q_scaled, X, ij_list)
 
 # Maximize entropy of posterior distribution with respect to epsilon
-loss_function <- function(V, epsilon) -Entropy(V)
+loss_function <- function(V, epsilon) -ConditionalEntropy(V)
 eps_optim <- optim(median(abs(phi_diffs)), function(e) {
   e_vij <- ComputeSimVij(phi_diffs, epsilon = e)
   loss_function(e_vij, epsilon = e)
@@ -102,7 +101,7 @@ t_FDR <- vapply(t_seq, function(t) FDR_estimate(optim_e_vij, t, e = 0), numeric(
 t_FNR <- vapply(t_seq, function(t) FNR_estimate(optim_e_vij, t, e = 0), numeric(1))
 
 
-eta <- .30
+eta <- .05
 optim_t <- min(c(t_seq[t_FDR <= eta], 1))
 optim_t
 decisions <- logical(nrow(ij_list))
