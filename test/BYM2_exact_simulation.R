@@ -109,11 +109,11 @@ sim_vij_order_graph <- ggplot() +
              alpha = 0.3, size = 1) +
   #geom_vline(xintercept = nrow(ij_list) - sum(optim_e_vij == 1)) +
   facet_grid(~order_type) +
-  labs(x = paste0("Rank of v_ij(", round(optim_e, digits = 3), ")"),
-       y = "Rank of v_ij(eps)") +
+  labs(x = paste0("Rank of h_ij(", round(optim_e, digits = 3), ")"),
+       y = "Rank of h_ij(eps)") +
   theme_minimal() +
   scale_color_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
-                     labels = c("No Difference", "True Difference"),
+                     labels = c("No difference", "True difference"),
                      values = c("FALSE" = "red", "TRUE" = "dodgerblue"))
 sim_vij_order_graph
 
@@ -134,6 +134,18 @@ y_map <- ggplot() +
   scale_fill_viridis_c(name = "Simulated Y") +
   theme_minimal() +
   theme(legend.position = "bottom")
+# alternative: quantile map
+# cut_pts <- quantile(y, seq(0, 1, length = 6))
+# y_sf <- cbind(y_cut = cut(y, cut_pts, right = FALSE,
+#                       include.lowest = TRUE),
+#               x1)
+# st_crs(y_sf) <- st_crs(county_sf)
+# y_map <- ggplot() +
+#   geom_sf(data = county_sf) +
+#   geom_sf(data = y_sf, aes(fill = y_cut)) +
+#   scale_fill_viridis_d(name = "Y quantile", drop = FALSE) +
+#   theme_minimal() +
+#   theme(legend.position = "bottom", legend.title=element_text(size=10))
 phi_map <- ggplot() +
   geom_sf(data = x2, aes(fill = phi)) +
   scale_fill_viridis_c() +
@@ -141,7 +153,7 @@ phi_map <- ggplot() +
   theme(legend.position = "bottom")
 pmeans_map <- ggplot() +
   geom_sf(data = yfit_pmeans_df, aes(fill = y_pmeans)) +
-  scale_fill_viridis_c(name = "Y Posterior Mean") +
+  scale_fill_viridis_c(name = "Y posterior mean") +
   theme_minimal() +
   theme(legend.position = "bottom")
 
@@ -152,8 +164,8 @@ sim_loss <- loss_function(sim_vij, epsilon = eps_seq)
 eps_loss_graph <- ggplot() +
   geom_line(data = data.frame(sim_loss = sim_loss, epsilon = eps_seq),
             aes(x = epsilon, y = sim_loss), color = "dodgerblue") +
-  labs(x = "Epsilon", y = "loss", title = "",
-       subtitle = paste0("Optimal Epsilon = ", round(optim_e, digits = 4))) +
+  labs(x = "Epsilon", y = "Loss", title = "",
+       subtitle = paste0("Optimal Epsilon = ", round(optim_e, digits = 3))) +
   geom_vline(xintercept = optim_e, lwd = 0.8, linetype = "dotted",
              color = "red") +
   theme_minimal()
@@ -192,7 +204,7 @@ optim_e_vij_hist <- ggplot() +
   geom_histogram(aes(x = optim_e_vij), fill = "dodgerblue", color = "black",
                  breaks = seq(0, 1, by = .05)) +
   lims(x = c(0, 1)) +
-  labs(x = paste0("v_ij(", round(optim_e, digits = 3), ")")) +
+  labs(x = paste0("h_ij(", round(optim_e, digits = 3), ")")) +
   theme_minimal()
 
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_data.png"),
