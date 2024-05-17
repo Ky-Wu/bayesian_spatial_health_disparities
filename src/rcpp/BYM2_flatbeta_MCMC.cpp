@@ -275,16 +275,21 @@ public:
     }
     bstar_rho = b_rho + rtr / (2.0 * sigma2);
     double rho_star = 2.0;
-    double MH;
-    double u;
+    double logMH;
+    double logu;
     while (rho_star > upper_rho || rho_star < lower_rho) {
       rho_star = 1.0 - 1.0 / randg(distr_param(astar_rho, 1.0 / bstar_rho));
     }
     if (rho_prior_type == "pc") {
-      MH = pow(2.0 * KLD(rho), 0.5) - pow(2.0 * KLD(rho_star), 0.5);
-      MH = MH * lambda_rho;
-      u = log(randu(distr_param(0, 1)));
-      rho_star = u < MH ? rho_star : rho;
+      // p(rho)
+      logMH = pow(2.0 * KLD(rho), 0.5) - pow(2.0 * KLD(rho_star), 0.5);
+      logMH = logMH * lambda_rho;
+      // p(gamma | sigma2, rho)
+      logMH -= (double) N / 2.0 * log(rho_star / rho);
+      vec_N = Q * gamma;
+      logMH -= dot(gamma, vec_N) / (2.0 * sigma2) * (1.0 / rho_star - 1.0 / rho);
+      logu = log(randu(distr_param(0, 1)));
+      rho_star = logu < logMH ? rho_star : rho;
     }
     rho = rho_star;
   }
