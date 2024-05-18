@@ -22,7 +22,6 @@ library(Rcpp)
 library(RcppArmadillo)
 library(ggplot2)
 rm(list = ls())
-set.seed(122)
 ```
 
 Generate simulation data and load in helper functions:
@@ -38,6 +37,8 @@ source(file.path(getwd(), "src", "R", "vij_computation.R"))
 Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2_flatbeta_MCMC.cpp"))
 # Fixed Rho Exact sampling
 Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2ExactSampling.cpp"))
+# seed used to produce figures
+set.seed(51624)
 ```
 
 ## Data Map
