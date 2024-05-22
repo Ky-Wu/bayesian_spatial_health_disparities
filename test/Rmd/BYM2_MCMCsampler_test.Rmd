@@ -166,7 +166,7 @@ t_seq <- seq(0, max(optim_e_vij) - .001, length.out = t_seq_length)
 t_FDR <- vapply(t_seq, function(t) FDR_estimate(optim_e_vij, t, e = 0), numeric(1))
 t_FNR <- vapply(t_seq, function(t) FNR_estimate(optim_e_vij, t, e = 0), numeric(1))
 # bayesian FDR tolerance
-eta <- .30
+eta <- .05
 optim_t <- min(c(t_seq[t_FDR <= eta], 1))
 optim_t
 print(paste0("Optimal epsilon: ", optim_e))
