@@ -80,13 +80,15 @@ plot(density(abs(phi_diffs[,130])), xlim = c(0, 6))
 # compute the true differences
 phi_truediffs <- BYM2_StdDiff(matrix(phi, nrow = 1),
                               rho, Q_scaled, X, ij_list)
-
 # Maximize entropy of posterior distribution with respect to epsilon
-loss_function <- function(V, epsilon) -ConditionalEntropy(V)
-eps_optim <- optim(median(abs(phi_diffs)), function(e) {
-  e_vij <- ComputeSimVij(phi_diffs, epsilon = e)
-  loss_function(e_vij, epsilon = e)
-}, method = "Brent", lower = 0.0001, upper = 5.0)
+loss_function <- function(v, epsilon) -ConditionalEntropy(v)
+system.time({
+  eps_optim <- optim(1, function(e) {
+    e_vij <- ComputeSimVij(phi_diffs, epsilon = e)
+    loss_function(e_vij, epsilon = e)
+  }, method = "Brent", lower = 0.0001, upper = 2.0)
+})
+
 optim_e <- eps_optim$par
 
 true_diff <- abs(phi_truediffs) > optim_e
@@ -123,18 +125,18 @@ node2_all <- county_sf[detected_borders$j,]
 x1 <- cbind("y" = y, county_sf)
 yfit_pmeans <- colMeans(YFit_sim)
 yfit_pmeans_df <- cbind(y_pmeans = yfit_pmeans, county_sf)
-p1 <- ggplot() +
+y_map <- ggplot() +
   geom_sf(data = x1, aes(fill = y)) +
   scale_fill_viridis_c() +
   theme_minimal() +
   theme(legend.position = "bottom")
-p3 <- ggplot() +
+y_pmeans_map <- ggplot() +
   geom_sf(data = yfit_pmeans_df, aes(fill = y_pmeans)) +
   scale_fill_viridis_c() +
   theme_minimal() +
   theme(legend.position = "bottom")
-p3
-p1
+y_pmeans_map
+y_map
 
 ## rejection order graph
 e2 <- round(optim_e / 3, digits = 3)
@@ -172,7 +174,8 @@ rejection_path[, order_type := fcase(
 )]
 sim_vij_order_graph <- ggplot() +
   geom_point(data = rejection_path,
-             aes(x = optim_e_vij, y = order, color = true_diff),
+             aes(x = optim_e_vij, y = order, color = true_diff,
+                 shape = true_diff),
              alpha = 0.3, size = 1) +
   #geom_vline(xintercept = nrow(ij_list) - sum(optim_e_vij == 1)) +
   facet_grid(~order_type) +
@@ -180,8 +183,11 @@ sim_vij_order_graph <- ggplot() +
        y = "Rank of v_ij(eps)") +
   theme_minimal() +
   scale_color_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
-                     labels = c("No Difference", "True Difference"),
-                     values = c("FALSE" = "red", "TRUE" = "dodgerblue"))
+                     labels = c("No difference", "True difference"),
+                     values = c("FALSE" = "red", "TRUE" = "dodgerblue")) +
+  scale_shape_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
+                     labels = c("No difference", "True difference"),
+                     values = c("FALSE" = 2, "TRUE" = 7))
 sim_vij_order_graph
 
 # Bayesian FDR vs. Sensitivity graphs: comparison to exact model
@@ -207,15 +213,16 @@ sim_FDR_sensitivity <- data.table(
     ComputeClassificationMetrics(decisions, true_diff)["sensitivity"]
   }, numeric(1))
 )
-
+FDR_sensitivity_df <- rbind(
+  cbind(sim_FDR_sensitivity, model = paste0("rho ~ PC(", lambda_rho, ")")),
+  cbind(sim2_FDR_sensitivity, model = paste0("rho = ", rho))
+)
 FDR_sensitivity_plot <- ggplot() +
-  geom_line(data = sim_FDR_sensitivity, aes(x = true_sensitivity, y = FDR,
-                                            col = "blue")) +
-  geom_line(data = sim2_FDR_sensitivity, aes(x = true_sensitivity, y = FDR,
-                                             col = "red")) +
-  theme_minimal() +
+  geom_line(data = FDR_sensitivity_df,
+            aes(x = true_sensitivity, y = FDR, col = model, linetype = model)) +
+  theme_bw() +
   theme(legend.position = "bottom") +
-  labs(x = "True Sensitivity", y = "Bayesian FDR") +
+  labs(x = "True Sensitivity", y = "Bayesian FDR")
   scale_color_manual(name = "Model",
                      labels = c(paste0("rho ~ PC(", lambda_rho, ")"), "rho = 0.93"),
                        values = c("blue" = "blue", "red" = "red"))
@@ -230,11 +237,24 @@ optim_e_vij_hist <- ggplot() +
   theme_minimal()
 # Histogram of posterior samples of rho
 rho_hist <- ggplot() +
-  geom_histogram(aes(x = rho_sim), fill = "dodgerblue", color = "black",
-                 breaks = seq(0, 1, by = .05)) +
-  lims(x = c(0, 1)) +
+  geom_histogram(aes(x = rho_sim), fill = "dodgerblue", color = "black") +
   labs(x = paste0("rho")) +
   theme_minimal()
+
+roc_list <- list(
+  pROC::roc(as.vector(true_diff), as.vector(optim_e_vij)),
+  pROC::roc(as.vector(true_diff), as.vector(optim2_e_vij))
+)
+names(roc_list) <- c(
+  paste0("rho ~ PC(", lambda_rho, ") [AUC = ",
+         round(pROC::auc(roc_list[[1]]), 3), "]"),
+  paste0("rho = ", rho, " [AUC = ", round(pROC::auc(roc_list[[2]]), 3), "]")
+)
+roc_plot <- pROC::ggroc(roc_list, aes = c("colour", "linetype")) +
+  scale_color_discrete(name = "Model") +
+  scale_linetype_discrete(name = "Model") +
+  theme_bw() +
+  theme(legend.position = "bottom")
 
 ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "vij_order_graph.png"),
        width = 8, height = 5.5, units = "in", sim_vij_order_graph)
@@ -244,15 +264,5 @@ ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "optim_e_vij_hist.png
        width = 6, height = 4.5, units = "in", optim_e_vij_hist)
 ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "rho_hist.png"),
        width = 6, height = 4.5, units = "in", rho_hist)
-par(mfrow = c(1, 1))
-png(file.path(getwd(), "output", "US_gibbs_sample_sim", "auc.png"),
-    width = 4.5, height = 6, units = "in", res = 120)
-plot(pROC::roc(as.vector(true_diff), as.vector(optim_e_vij)), col = "blue",
-     print.auc = TRUE)
-plot(pROC::roc(as.vector(true_diff), as.vector(optim2_e_vij)), col = "red",
-     add = TRUE, print.auc = TRUE, print.auc.x = 0.5, print.auc.y = 0.45)
-legend("bottomright", col = c("blue", "red"), lty = 1,
-       legend = c(paste0("rho ~ PC(", lambda_rho, ")"), "Rho = 0.93"))
-dev.off()
-
-
+ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "auc.png"),
+       width = 4.5, height = 6, units = "in", roc_plot)
