@@ -221,7 +221,7 @@ optim_e_vij_hist
 ```{r}
 # select cutoff t in d(i, j) = I(v_ij > t) to control FDR and minimize FNR
 optim_e_vij_order <- order(optim_e_vij, decreasing = F)
-eta <- .20
+eta <- .05
 t_seq_length <- 10000
 t_seq <- seq(0, max(optim_e_vij) - .001, length.out = t_seq_length)
 t_FDR <- vapply(t_seq, function(t) FDR_estimate(optim_e_vij, t, e = 0), numeric(1))
