@@ -105,8 +105,9 @@ rejection_path[, order_type := fcase(
 )]
 sim_vij_order_graph <- ggplot() +
   geom_point(data = rejection_path,
-             aes(x = optim_e_vij, y = order, color = true_diff),
-             alpha = 0.3, size = 1) +
+             aes(x = optim_e_vij, y = order, color = true_diff,
+                 shape = true_diff),
+             alpha = 0.5, size = 1) +
   #geom_vline(xintercept = nrow(ij_list) - sum(optim_e_vij == 1)) +
   facet_grid(~order_type) +
   labs(x = paste0("Rank of h_ij(", round(optim_e, digits = 3), ")"),
@@ -114,7 +115,10 @@ sim_vij_order_graph <- ggplot() +
   theme_minimal() +
   scale_color_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
                      labels = c("No difference", "True difference"),
-                     values = c("FALSE" = "red", "TRUE" = "dodgerblue"))
+                     values = c("FALSE" = "red", "TRUE" = "dodgerblue")) +
+  scale_shape_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
+                     labels = c("No difference", "True difference"),
+                     values = c("FALSE" = 2, "TRUE" = 7))
 sim_vij_order_graph
 
 decisions <- logical(nrow(ij_list))
@@ -165,7 +169,7 @@ eps_loss_graph <- ggplot() +
   geom_line(data = data.frame(sim_loss = sim_loss, epsilon = eps_seq),
             aes(x = epsilon, y = sim_loss), color = "dodgerblue") +
   labs(x = "Epsilon", y = "Loss", title = "",
-       subtitle = paste0("Optimal Epsilon = ", round(optim_e, digits = 3))) +
+       subtitle = paste0("Optimal epsilon = ", round(optim_e, digits = 3))) +
   geom_vline(xintercept = optim_e, lwd = 0.8, linetype = "dotted",
              color = "red") +
   theme_minimal()
@@ -186,18 +190,21 @@ FDR_FNR_curves[, epsilon := factor(epsilon, levels = sort(unique(epsilon)),
                                    ordered = T)]
 FDRt_graph <- ggplot() +
   geom_line(data = FDR_FNR_curves, aes(x = t, y = FDR, group = epsilon,
-                                        color = epsilon)) +
+                                        color = epsilon, linetype = epsilon)) +
   labs(x = "t", y = "Bayesian FDR") +
-  theme_minimal()
+  scale_color_hue(l = 30) +
+  theme_bw()
 FNRt_graph <- ggplot() +
   geom_line(data = FDR_FNR_curves, aes(x = t, y = FNR, group = epsilon,
-                                        color = epsilon)) +
+                                        color = epsilon, linetype = epsilon)) +
   labs(x = "t", y = "Bayesian FNR") +
-  theme_minimal()
+  scale_color_hue(l = 30) +
+  theme_bw()
 FDRFNR_eps_graph <- ggplot() +
   geom_line(data = FDR_FNR_curves, aes(x = FNR, y = FDR, group = epsilon,
-                                        color = epsilon)) +
+                                        color = epsilon, linetype = epsilon)) +
   labs(x = "Bayesian FNR", y = "Bayesian FDR") +
+  scale_color_hue(l = 30) +
   theme_minimal()
 
 optim_e_vij_hist <- ggplot() +
@@ -208,9 +215,9 @@ optim_e_vij_hist <- ggplot() +
   theme_minimal()
 
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_data.png"),
-       width = 6, height = 4.5, units = "in", y_map, dpi = 900)
+       width = 8, height = 4.5, units = "in", y_map, dpi = 900)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_phi.png"),
-       width = 6, height = 4.5, units = "in", phi_map, dpi = 900)
+       width = 8, height = 4.5, units = "in", phi_map, dpi = 900)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_yfitpmean.png"),
        width = 6, height = 4.5, units = "in", pmeans_map, dpi = 900)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "vij_order.png"),
