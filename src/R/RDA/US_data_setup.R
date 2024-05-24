@@ -28,6 +28,7 @@ county_df[county_name == "Oglala Lakota", county_fips := 46102]
 county_sp <- maptools::map2SpatialPolygons(county_poly, IDs = county_df$county_fips)
 setkey(county_df, county_fips)
 county_sf <- st_as_sf(county_sp)
+st_crs(county_sf) <- st_crs(st_as_sf(county_poly))
 county_sf$fips <- unique(county_df$county_fips)
 county_nbs <- poly2nb(county_sp)
 no_neighbors <- vapply(county_nbs, function(x) identical(x, 0L), logical(1))
