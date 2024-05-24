@@ -48,12 +48,13 @@ under a scaled CAR variance structure.
 
 ```{r}
 x1 <- cbind("y" = y, county_sf)
-p1 <- ggplot() +
+y_map <- ggplot() +
   geom_sf(data = x1, aes(fill = y)) +
   scale_fill_viridis_c() +
-  theme_minimal() +
+  coord_sf(crs = st_crs(5070)) +
+  theme_bw() +
   theme(legend.position = "bottom")
-p1
+y_map
 ```
 
 # Gibbs Sampling
@@ -150,7 +151,7 @@ optim_e_vij_hist <- ggplot() +
                  breaks = seq(0, 1, by = .05)) +
   lims(x = c(0, 1)) +
   labs(x = paste0("v_ij(", round(optim_e, digits = 3), ")")) +
-  theme_minimal()
+  theme_bw()
 optim_e_vij_hist
 ```
 
@@ -183,29 +184,26 @@ Posterior means of data computed using 10,000 posterior samples.
 ```{r}
 yfit_pmeans <- colMeans(YFit_sim)
 yfit_pmeans_df <- cbind(y_pmeans = yfit_pmeans, county_sf)
-p3 <- ggplot() +
+y_pmeans_map <- ggplot() +
   geom_sf(data = yfit_pmeans_df, aes(fill = y_pmeans)) +
-  scale_fill_viridis_c() +
-  theme_minimal() +
+  scale_fill_viridis_c(name = "Y posterior mean") +
+  coord_sf(crs = st_crs(5070)) +
+  theme_bw() +
   theme(legend.position = "bottom")
-p3
+y_pmeans_map
 ```
 
 Histogram of posterior samples of $\rho$:
 ```{r}
 rho_hist <- ggplot() +
-  geom_histogram(aes(x = rho_sim), fill = "dodgerblue", color = "black",
-                 breaks = seq(0, 1, by = .05)) +
-  lims(x = c(0, 1)) +
+  geom_histogram(aes(x = rho_sim), fill = "dodgerblue", color = "black") +
   labs(x = paste0("rho")) +
-  theme_minimal()
+  theme_bw()
 ```
 
 ## ROC Curves Comparison
 
-Figure 5a: Comparison of ROC curves for simulated data when fixing $\rho$ as a hyperparameter at the true simulation value versus placing a PC prior on
-$\rho$ and using Gibbs sampling. The classification performance of both models are
-compared using fixed difference threshold $\epsilon_{\text{CE}} = 1.105$. 
+Figure 5a: Classification performance of spatial disparity detection on simulated data when drawing exact samples conditional on $\rho = 0.93$ versus placing a PC prior on $\rho$ and using Metropolis within Gibbs sampling. The classification performance of both models are compared using fixed difference threshold $\epsilon_{CE} = 1.611$. (a) ROC curves for each model. The area under each ROC curve is 0.881.
 
 ```{r}
 # compare to exact model
@@ -213,22 +211,31 @@ compared using fixed difference threshold $\epsilon_{\text{CE}} = 1.105$.
 phi_diffs2 <- readRDS(file.path(getwd(), "output", "US_exact_sample_sim",
                                 "phi_diffs.Rds"))
 optim2_e_vij <- ComputeSimVij(phi_diffs2, epsilon = optim_e)
-par(mfrow = c(1, 1))
-plot(pROC::roc(as.vector(true_diff), as.vector(optim_e_vij)), col = "blue",
-     print.auc = TRUE)
-plot(pROC::roc(as.vector(true_diff), as.vector(optim2_e_vij)), col = "red",
-     add = TRUE, print.auc = TRUE, print.auc.x = 0.5, print.auc.y = 0.45)
-legend("bottomright", col = c("blue", "red"), lty = 1,
-       legend = c(paste0("rho ~ PC(", lambda_rho, ")"), "Rho = 0.93"))
+roc_list <- list(
+  pROC::roc(as.vector(true_diff), as.vector(optim_e_vij)),
+  pROC::roc(as.vector(true_diff), as.vector(optim2_e_vij))
+)
+names(roc_list) <- c(
+  paste0("rho ~ PC(", lambda_rho, ")"),
+  paste0("rho = ", rho)
+)
+auc <- lapply(roc_list, function(r) round(pROC::auc(r), 3))
+auc
+roc_plot <- pROC::ggroc(roc_list, aes = c("colour", "linetype")) +
+  scale_color_discrete(name = "Model") +
+  scale_linetype_discrete(name = "Model") +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  labs(x = "Specificity", y = "Sensitivity")
+roc_plot
 ```
 
 ## Bayesian FDR vs. Sensitivity 
 
 We compute the Bayesian FDR versus sensitivity curves for both the exact conjugate model conditioning on the true value of $\rho$ and the BYM2 model with a penalized complexity prior on $\rho$.
 
-Figure 5b: Comparison of Bayesian FDR versus true sensitivity curves for simulated data when fixing $\rho$ as a hyperparameter at the true simulation value versus placing a PC prior on
-$\rho$ and using Gibbs sampling. The classification performance of both models are
-compared using fixed difference threshold $\epsilon_{\text{CE}} = 1.105$. 
+Figure 5b: Classification performance of spatial disparity detection on simulated data when drawing exact samples conditional on $\rho = 0.93$ versus placing a PC prior on $\rho$ and using Metropolis within Gibbs sampling. The classification performance of both models are compared using fixed difference threshold $\epsilon_{CE} = 1.611$. (b) Bayesian FDR versus true senstivity.
+
 ```{r}
 sim2_FDR_sensitivity <- data.table(
   t = t_seq,
@@ -249,17 +256,19 @@ sim_FDR_sensitivity <- data.table(
   }, numeric(1))
 )
 
+FDR_sensitivity_df <- rbind(
+  cbind(sim_FDR_sensitivity, model = paste0("rho ~ PC(", lambda_rho, ")")),
+  cbind(sim2_FDR_sensitivity, model = paste0("rho = ", rho))
+)
+FDR_sensitivity_df$model <- factor(FDR_sensitivity_df$model,
+                                   levels = c(paste0("rho ~ PC(", lambda_rho, ")"),
+                                              paste0("rho = ", rho)))
 FDR_sensitivity_plot <- ggplot() +
-  geom_line(data = sim_FDR_sensitivity, aes(x = true_sensitivity, y = FDR,
-                                            col = "blue")) +
-  geom_line(data = sim2_FDR_sensitivity, aes(x = true_sensitivity, y = FDR,
-                                             col = "red")) +
-  theme_minimal() +
+  geom_line(data = FDR_sensitivity_df,
+            aes(x = true_sensitivity, y = FDR, col = model, linetype = model)) +
+  theme_bw() +
   theme(legend.position = "bottom") +
-  labs(x = "True Sensitivity", y = "Bayesian FDR") +
-  scale_color_manual(name = "Model",
-                     labels = c(paste0("rho ~ PC(", lambda_rho, ")"), "rho = 0.93"),
-                       values = c("blue" = "blue", "red" = "red"))
+  labs(x = "Sensitivity", y = "Bayesian FDR")
 FDR_sensitivity_plot
 ```
 
@@ -268,7 +277,7 @@ FDR_sensitivity_plot
 To check the stability of the rankings with respect to choice of the difference threshold,
 we plot the rankings of the difference probabilities under different values of the difference threshold $\epsilon$ and compare to those we previously computed using $\epsilon_{\text{CE}}$.
 
-Figure 4: Rankings of the posterior probabilities $v_1(\epsilon), ..., v_K(\epsilon)$ for $\epsilon = 0.368, 0.737, 1.657, 3.314$ against $v_1(\epsilon_{\text{CE}}), ..., v_K(\epsilon_{\text{CE}})$ produced from using simulated data and a PC prior on $\rho$. True posterior differences according to the true simulated values of $\phi$ and $\rho$ are shown in blue. 
+Figure 6: Simulated rankings of $\epsilon$-difference probabilities $\left\{v_{ij}(\epsilon)\right\}_{(i, j) \in L}$ for $\epsilon = 0.537, 1.074, 2.417, 4.833$ versus rankings of $\left\{v_{ij}(\epsilon)\right\}_{(i, j) \in L}$ using a PC prior on $\rho$. True posterior differences according to the true simulated values of $\phi$ and $\rho$ are shown in blue. 
 
 ```{r}
 rej_indx <- optim_e_vij_order[optim_e_vij_order %in%
@@ -313,15 +322,19 @@ rejection_path[, order_type := fcase(
 )]
 sim_vij_order_graph <- ggplot() +
   geom_point(data = rejection_path,
-             aes(x = optim_e_vij, y = order, color = true_diff),
+             aes(x = optim_e_vij, y = order, color = true_diff,
+                 shape = true_diff),
              alpha = 0.3, size = 1) +
   #geom_vline(xintercept = nrow(ij_list) - sum(optim_e_vij == 1)) +
   facet_grid(~order_type) +
   labs(x = paste0("Rank of v_ij(", round(optim_e, digits = 3), ")"),
        y = "Rank of v_ij(eps)") +
-  theme_minimal() +
+  theme_bw() +
   scale_color_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
-                     labels = c("No Difference", "True Difference"),
-                     values = c("FALSE" = "red", "TRUE" = "dodgerblue"))
+                     labels = c("No difference", "True difference"),
+                     values = c("FALSE" = "red", "TRUE" = "dodgerblue")) +
+  scale_shape_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
+                     labels = c("No difference", "True difference"),
+                     values = c("FALSE" = 2, "TRUE" = 7))
 sim_vij_order_graph
 ```

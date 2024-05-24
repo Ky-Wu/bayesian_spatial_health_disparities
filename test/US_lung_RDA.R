@@ -186,7 +186,7 @@ vij_order_graph <- ggplot() +
   facet_grid(~order_type) +
   labs(x = paste0("Rank of v_ij(", round(optim_e, digits = 3), ")"),
        y = "Rank of v_ij(eps)") +
-  theme_minimal() +
+  theme_bw() +
   scale_color_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
                      labels = c("Not classified difference", "Classified difference"),
                      values = c("FALSE" = "darkgrey", "TRUE" = "dodgerblue")) +
@@ -202,7 +202,7 @@ optim_e_vij_hist <- ggplot() +
                  breaks = seq(0, 1, by = .05)) +
   lims(x = c(0, 1)) +
   labs(x = paste0("v_ij(", round(optim_e, digits = 3), ")")) +
-  theme_minimal()
+  theme_bw()
 
 yfit_pmeans <- colMeans(YFit_sim)
 cut_pts <- quantile(y, seq(0, 1, length = 6))
@@ -256,7 +256,7 @@ rho_hist <- ggplot() +
                  breaks = seq(0, 1, by = .05)) +
   lims(x = c(0, 1)) +
   labs(x = paste0("rho")) +
-  theme_minimal()
+  theme_bw()
 data_maps <- ggarrange(lung_map, smoking_map, common.legend = FALSE, nrow = 2,
           labels = "AUTO", legend = "bottom")
 ggsave(file.path(getwd(), "output", "RDA", "US_data", "vij_order_graph.png"),

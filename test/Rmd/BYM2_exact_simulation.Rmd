@@ -43,21 +43,24 @@ Figure 1a: Simulated response data $y$ where the spatial effects $\phi$ are simu
 under a scaled CAR variance structure.
 
 ```{r}
-x1 <- cbind("y" = y, st_as_sf(county_sp))
+county_sf$y <- y
+county_sf$phi <- phi
 y_map <- ggplot() +
-  geom_sf(data = x1, aes(fill = y)) +
+  geom_sf(data = county_sf, aes(fill = y)) +
   scale_fill_viridis_c(name = "Simulated Y") +
-  theme_minimal() +
+  theme_bw() +
+  coord_sf(crs = st_crs(5070)) +
   theme(legend.position = "bottom")
+y_map
 ```
 
 Posterior map of true values of spatial residuals $\phi$:
 ```{r}
-x2 <- cbind("phi" = phi, st_as_sf(county_sp))
 phi_map <- ggplot() +
-  geom_sf(data = x2, aes(fill = phi)) +
-  scale_fill_viridis_c() +
-  theme_minimal() +
+  geom_sf(data = county_sf, aes(fill = phi)) +
+  scale_fill_viridis_c(name = "Simulated phi") +
+  theme_bw() +
+  coord_sf(crs = st_crs(5070)) +
   theme(legend.position = "bottom")
 ```
 
@@ -140,30 +143,30 @@ sum(true_diff)
 Figure 2a: Conditional Entropy Loss function evaluated across $\epsilon$ with a dotted red line indicating the numerically optimal $\epsilon_{\text{CE}} = 1.296$.
 
 ```{r}
-eps_seq <- seq(0.1, optim_e * 4, length.out = 100)
 eps_seq <- seq(0.001, max(abs(phi_diffs)) / 2, length.out = 100)
 sim_vij <- ComputeSimVij(phi_diffs, epsilon = eps_seq)
 sim_loss <- loss_function(sim_vij, epsilon = eps_seq)
 eps_loss_graph <- ggplot() +
   geom_line(data = data.frame(sim_loss = sim_loss, epsilon = eps_seq),
             aes(x = epsilon, y = sim_loss), color = "dodgerblue") +
-  labs(x = "Epsilon", y = "loss", title = "",
-       subtitle = paste0("Optimal Epsilon = ", round(optim_e, digits = 4))) +
+  labs(x = "Epsilon", y = "Loss", title = "",
+       subtitle = paste0("Optimal epsilon = ", round(optim_e, digits = 3))) +
   geom_vline(xintercept = optim_e, lwd = 0.8, linetype = "dotted",
              color = "red") +
-  theme_minimal()
+  theme_bw()
+eps_loss_graph
 ```
 
 ## Histogram of Difference Probabilities
 
-Figure 2b: Histogram of the posterior probabilities $h_1(\epsilon_{\text{CE}}), ..., h_K(\epsilon_{\text{CE}})$.
+Figure 2b: Histogram of the posterior probabilities $\{h_{ij}(\epsilon)\}_{(i, j) \in L}$.
 ```{r}
 optim_e_vij_hist <- ggplot() +
   geom_histogram(aes(x = optim_e_vij), fill = "dodgerblue", color = "black",
                  breaks = seq(0, 1, by = .05)) +
   lims(x = c(0, 1)) +
-  labs(x = paste0("v_ij(", round(optim_e, digits = 3), ")")) +
-  theme_minimal()
+  labs(x = paste0("h_ij(", round(optim_e, digits = 3), ")")) +
+  theme_bw()
 ```
 
 # Bayesian FDR Control
@@ -192,13 +195,14 @@ mean(decisions)
 
 Figure 1b: Posterior means of data computed using 10,000 exact samples from the joint posterior.
 ```{r}
-yfit_pmeans <- colMeans(YFit_sim)
-yfit_pmeans_df <- cbind(y_pmeans = yfit_pmeans, st_as_sf(county_sp))
+county_sf$y_pmeans <- colMeans(YFit_sim)
 pmeans_map <- ggplot() +
-  geom_sf(data = yfit_pmeans_df, aes(fill = y_pmeans)) +
-  scale_fill_viridis_c(name = "Y Posterior Mean") +
-  theme_minimal() +
+  geom_sf(data = county_sf, aes(fill = y_pmeans)) +
+  scale_fill_viridis_c(name = "Y posterior mean") +
+  theme_bw() +
+  coord_sf(crs = st_crs(5070)) +
   theme(legend.position = "bottom")
+pmeans_map
 ```
 
 ## FDR vs. FNR curves
@@ -228,9 +232,10 @@ FDR_FNR_curves[, epsilon := factor(epsilon, levels = sort(unique(epsilon)),
                                    ordered = T)]
 FDRFNR_eps_graph <- ggplot() +
   geom_line(data = FDR_FNR_curves, aes(x = FNR, y = FDR, group = epsilon,
-                                        color = epsilon)) +
+                                        color = epsilon, linetype = epsilon)) +
   labs(x = "Bayesian FNR", y = "Bayesian FDR") +
-  theme_minimal()
+  scale_color_hue(l = 30) +
+  theme_bw()
 FDRFNR_eps_graph
 ```
 
@@ -239,10 +244,8 @@ FDRFNR_eps_graph
 To check the stability of the rankings with respect to choice of the difference threshold,
 we plot the rankings of the difference probabilities under different values of the difference threshold $\epsilon$ and compare to those we previously computed using $\epsilon_{\text{CE}}$.
 
-Figure 4: Rankings of the simulated data posterior probabilities of $h_1(\epsilon), ..., h_K(\epsilon)$ for four different values of $\epsilon$ against the final posterior probabilities $h_1(\epsilon_{\text{CE}}), ..., h_K(\epsilon_{\text{CE}})$ when conditioning on the true value of $\rho$. True posterior differences according to the true values of $\phi$ and $\rho$ are shown in blue.
+Figure 4: Rankings of the simulated difference probabilities $\{h_{ij}(\epsilon)\}_{(i, j) \in L}$ for $\epsilon = 0.432, 0.864, 1.944, 3.889$ versus rankings of $\{h_{ij}(\epsilon_{CE})\}_{(i, j) \in L}$ when conditioning on the true value of $\rho$. True posterior differences according to the true values of $\phi$ and $\rho$ are shown in blue.
 ```{r}
-
-
 optim_e_vij_order <- order(optim_e_vij, decreasing = F)
 e2_vij_order <- order(e2_vij[optim_e_vij_order], decreasing = F)
 e3_vij_order <- order(e3_vij[optim_e_vij_order], decreasing = F)
@@ -268,16 +271,20 @@ rejection_path[, order_type := fcase(
 )]
 sim_vij_order_graph <- ggplot() +
   geom_point(data = rejection_path,
-             aes(x = optim_e_vij, y = order, color = true_diff),
-             alpha = 0.3, size = 1) +
+             aes(x = optim_e_vij, y = order, color = true_diff,
+                 shape = true_diff),
+             alpha = 0.5, size = 1) +
   #geom_vline(xintercept = nrow(ij_list) - sum(optim_e_vij == 1)) +
   facet_grid(~order_type) +
-  labs(x = paste0("Rank of v_ij(", round(optim_e, digits = 3), ")"),
-       y = "Rank of v_ij(eps)") +
-  theme_minimal() +
+  labs(x = paste0("Rank of h_ij(", round(optim_e, digits = 3), ")"),
+       y = "Rank of h_ij(eps)") +
+  theme_bw() +
   scale_color_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
-                     labels = c("No Difference", "True Difference"),
-                     values = c("FALSE" = "red", "TRUE" = "dodgerblue"))
+                     labels = c("No difference", "True difference"),
+                     values = c("FALSE" = "red", "TRUE" = "dodgerblue")) +
+  scale_shape_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
+                     labels = c("No difference", "True difference"),
+                     values = c("FALSE" = 2, "TRUE" = 7))
 sim_vij_order_graph
 ```
 

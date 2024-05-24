@@ -133,7 +133,7 @@ y_map <- ggplot() +
   theme(legend.position = "bottom")
 y_pmeans_map <- ggplot() +
   geom_sf(data = yfit_pmeans_df, aes(fill = y_pmeans)) +
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(name = "Y posterior mean") +
   coord_sf(crs = st_crs(5070)) +
   theme_bw() +
   theme(legend.position = "bottom")
