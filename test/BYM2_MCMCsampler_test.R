@@ -128,12 +128,14 @@ yfit_pmeans_df <- cbind(y_pmeans = yfit_pmeans, county_sf)
 y_map <- ggplot() +
   geom_sf(data = x1, aes(fill = y)) +
   scale_fill_viridis_c() +
-  theme_minimal() +
+  coord_sf(crs = st_crs(5070)) +
+  theme_bw() +
   theme(legend.position = "bottom")
 y_pmeans_map <- ggplot() +
   geom_sf(data = yfit_pmeans_df, aes(fill = y_pmeans)) +
   scale_fill_viridis_c() +
-  theme_minimal() +
+  coord_sf(crs = st_crs(5070)) +
+  theme_bw() +
   theme(legend.position = "bottom")
 y_pmeans_map
 y_map
@@ -181,7 +183,7 @@ sim_vij_order_graph <- ggplot() +
   facet_grid(~order_type) +
   labs(x = paste0("Rank of v_ij(", round(optim_e, digits = 3), ")"),
        y = "Rank of v_ij(eps)") +
-  theme_minimal() +
+  theme_bw() +
   scale_color_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
                      labels = c("No difference", "True difference"),
                      values = c("FALSE" = "red", "TRUE" = "dodgerblue")) +
@@ -217,15 +219,15 @@ FDR_sensitivity_df <- rbind(
   cbind(sim_FDR_sensitivity, model = paste0("rho ~ PC(", lambda_rho, ")")),
   cbind(sim2_FDR_sensitivity, model = paste0("rho = ", rho))
 )
+FDR_sensitivity_df$model <- factor(FDR_sensitivity_df$model,
+                                   levels = c(paste0("rho ~ PC(", lambda_rho, ")"),
+                                              paste0("rho = ", rho)))
 FDR_sensitivity_plot <- ggplot() +
   geom_line(data = FDR_sensitivity_df,
             aes(x = true_sensitivity, y = FDR, col = model, linetype = model)) +
   theme_bw() +
   theme(legend.position = "bottom") +
-  labs(x = "True Sensitivity", y = "Bayesian FDR")
-  scale_color_manual(name = "Model",
-                     labels = c(paste0("rho ~ PC(", lambda_rho, ")"), "rho = 0.93"),
-                       values = c("blue" = "blue", "red" = "red"))
+  labs(x = "Sensitivity", y = "Bayesian FDR")
 FDR_sensitivity_plot
 
 # Histogram of difference probabilities
@@ -234,27 +236,28 @@ optim_e_vij_hist <- ggplot() +
                  breaks = seq(0, 1, by = .05)) +
   lims(x = c(0, 1)) +
   labs(x = paste0("v_ij(", round(optim_e, digits = 3), ")")) +
-  theme_minimal()
+  theme_bw()
 # Histogram of posterior samples of rho
 rho_hist <- ggplot() +
   geom_histogram(aes(x = rho_sim), fill = "dodgerblue", color = "black") +
   labs(x = paste0("rho")) +
-  theme_minimal()
+  theme_bw()
 
 roc_list <- list(
   pROC::roc(as.vector(true_diff), as.vector(optim_e_vij)),
   pROC::roc(as.vector(true_diff), as.vector(optim2_e_vij))
 )
 names(roc_list) <- c(
-  paste0("rho ~ PC(", lambda_rho, ") [AUC = ",
-         round(pROC::auc(roc_list[[1]]), 3), "]"),
-  paste0("rho = ", rho, " [AUC = ", round(pROC::auc(roc_list[[2]]), 3), "]")
+  paste0("rho ~ PC(", lambda_rho, ")"),
+  paste0("rho = ", rho)
 )
+auc <- lapply(roc_list, function(r) round(pROC::auc(r), 3))
 roc_plot <- pROC::ggroc(roc_list, aes = c("colour", "linetype")) +
   scale_color_discrete(name = "Model") +
   scale_linetype_discrete(name = "Model") +
   theme_bw() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  labs(x = "Specificity", y = "Sensitivity")
 
 ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "vij_order_graph.png"),
        width = 8, height = 5.5, units = "in", sim_vij_order_graph)

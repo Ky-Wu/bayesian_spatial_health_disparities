@@ -112,7 +112,7 @@ sim_vij_order_graph <- ggplot() +
   facet_grid(~order_type) +
   labs(x = paste0("Rank of h_ij(", round(optim_e, digits = 3), ")"),
        y = "Rank of h_ij(eps)") +
-  theme_minimal() +
+  theme_bw() +
   scale_color_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
                      labels = c("No difference", "True difference"),
                      values = c("FALSE" = "red", "TRUE" = "dodgerblue")) +
@@ -128,15 +128,15 @@ print(paste0("Optimal t: ", optim_t))
 print(ComputeClassificationMetrics(decisions, true_diff))
 mean(decisions)
 
-x1 <- cbind("y" = y, st_as_sf(county_sp))
-x2 <- cbind("phi" = phi, st_as_sf(county_sp))
-yfit_pmeans <- colMeans(YFit_sim)
-yfit_pmeans_df <- cbind(y_pmeans = yfit_pmeans, st_as_sf(county_sp))
+county_sf$y <- y
+county_sf$phi <- phi
+county_sf$y_pmeans <- colMeans(YFit_sim)
 
 y_map <- ggplot() +
-  geom_sf(data = x1, aes(fill = y)) +
+  geom_sf(data = county_sf, aes(fill = y)) +
   scale_fill_viridis_c(name = "Simulated Y") +
-  theme_minimal() +
+  theme_bw() +
+  coord_sf(crs = st_crs(5070)) +
   theme(legend.position = "bottom")
 # alternative: quantile map
 # cut_pts <- quantile(y, seq(0, 1, length = 6))
@@ -151,17 +151,19 @@ y_map <- ggplot() +
 #   theme_minimal() +
 #   theme(legend.position = "bottom", legend.title=element_text(size=10))
 phi_map <- ggplot() +
-  geom_sf(data = x2, aes(fill = phi)) +
-  scale_fill_viridis_c() +
-  theme_minimal() +
+  geom_sf(data = county_sf, aes(fill = phi)) +
+  scale_fill_viridis_c(name = "Simulated phi") +
+  theme_bw() +
+  coord_sf(crs = st_crs(5070)) +
   theme(legend.position = "bottom")
 pmeans_map <- ggplot() +
-  geom_sf(data = yfit_pmeans_df, aes(fill = y_pmeans)) +
+  geom_sf(data = county_sf, aes(fill = y_pmeans)) +
   scale_fill_viridis_c(name = "Y posterior mean") +
-  theme_minimal() +
+  theme_bw() +
+  coord_sf(crs = st_crs(5070)) +
   theme(legend.position = "bottom")
 
-eps_seq <- seq(0.1, optim_e * 4, length.out = 100)
+#eps_seq <- seq(0.001, optim_e * 2.5, length.out = 100)
 eps_seq <- seq(0.001, max(abs(phi_diffs)) / 2, length.out = 100)
 sim_vij <- ComputeSimVij(phi_diffs, epsilon = eps_seq)
 sim_loss <- loss_function(sim_vij, epsilon = eps_seq)
@@ -172,7 +174,7 @@ eps_loss_graph <- ggplot() +
        subtitle = paste0("Optimal epsilon = ", round(optim_e, digits = 3))) +
   geom_vline(xintercept = optim_e, lwd = 0.8, linetype = "dotted",
              color = "red") +
-  theme_minimal()
+  theme_bw()
 
 eps_seq <- c(e2, e3, optim_e, e4, e5)
 e_vijs <- cbind(e2_vij, e3_vij, optim_e_vij, e4_vij, e5_vij)
@@ -205,14 +207,14 @@ FDRFNR_eps_graph <- ggplot() +
                                         color = epsilon, linetype = epsilon)) +
   labs(x = "Bayesian FNR", y = "Bayesian FDR") +
   scale_color_hue(l = 30) +
-  theme_minimal()
+  theme_bw()
 
 optim_e_vij_hist <- ggplot() +
   geom_histogram(aes(x = optim_e_vij), fill = "dodgerblue", color = "black",
                  breaks = seq(0, 1, by = .05)) +
   lims(x = c(0, 1)) +
   labs(x = paste0("h_ij(", round(optim_e, digits = 3), ")")) +
-  theme_minimal()
+  theme_bw()
 
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_data.png"),
        width = 8, height = 4.5, units = "in", y_map, dpi = 900)
