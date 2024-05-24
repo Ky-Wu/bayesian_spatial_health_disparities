@@ -179,7 +179,8 @@ rejection_path[, order_type := fcase(
 )]
 vij_order_graph <- ggplot() +
   geom_point(data = rejection_path,
-             aes(x = optim_e_order, y = order, color = classified_diff),
+             aes(x = optim_e_order, y = order, color = classified_diff,
+                 shape = classified_diff),
              alpha = 0.3, size = 1) +
   #geom_vline(xintercept = nrow(ij_list) - sum(optim_e_vij == 1)) +
   facet_grid(~order_type) +
@@ -187,9 +188,13 @@ vij_order_graph <- ggplot() +
        y = "Rank of v_ij(eps)") +
   theme_minimal() +
   scale_color_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
-                     labels = c("Not Classified Difference", "Classified Difference"),
+                     labels = c("Not classified difference", "Classified difference"),
                      values = c("FALSE" = "darkgrey", "TRUE" = "dodgerblue")) +
-  guides(colour = guide_legend(override.aes = list(size = 2, alpha = 1)))
+  scale_shape_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
+                     labels = c("Not classified difference", "Classified difference"),
+                     values = c(2, 7)) +
+  guides(colour = guide_legend(override.aes = list(size = 2, alpha = 1)),
+         shape = guide_legend(override.aes = list(size = 2, alpha = 1)))
 vij_order_graph
 
 optim_e_vij_hist <- ggplot() +
@@ -204,40 +209,46 @@ cut_pts <- quantile(y, seq(0, 1, length = 6))
 yfit_pmeans_sf <- cbind(y_pmeans = cut(yfit_pmeans, cut_pts, right = FALSE,
                                        include.lowest = TRUE),
                         cancer_smoking_sf)
+
 lung_map <- ggplot() +
   geom_sf(data = county_sf) +
   geom_sf(data = cancer_smoking_sf[!is.na(cancer_smoking_sf$mortality2014),],
           aes(fill = cut(mortality2014, cut_pts, right = FALSE,
-                         include.lowest = TRUE))) +
-  scale_fill_viridis_d(name = "Tracheal, Bronchus & Lung Cancer Mortality",
+                         include.lowest = TRUE)), col = "gray") +
+  scale_fill_viridis_d(name = "Tracheal, bronchus & lung cancer mortality",
                        drop = FALSE) +
-  theme_minimal() +
+  coord_sf(crs = st_crs(5070)) +
+  theme_bw() +
   theme(legend.position = "bottom", legend.title=element_text(size=10))
 smoking_map <- ggplot() +
   geom_sf(data = county_sf) +
   geom_sf(data = cancer_smoking_sf[!is.na(cancer_smoking_sf$mortality2014),],
           aes(fill = cut(total_mean_smoking,
                          quantile(total_mean_smoking, seq(0, 1, length = 6)),
-                         right = FALSE, include.lowest = TRUE))) +
-  scale_fill_viridis_d(name = "Total Smoking Prevalence",
+                         right = FALSE, include.lowest = TRUE)),
+          col = "gray") +
+  scale_fill_viridis_d(name = "Total smoking prevalence",
                        drop = FALSE) +
-  theme_minimal() +
+  coord_sf(crs = st_crs(5070)) +
+  theme_bw() +
   theme(legend.position = "bottom", legend.title=element_text(size=10))
 ols_e_map <- ggplot() +
   geom_sf(data = county_sf) +
-  geom_sf(data = cancer_smoking_sf,
+  geom_sf(data = cancer_smoking_sf, col = "gray",
           aes(fill = cut(y - e, quantile(y - e, seq(0, 1, 0.2))))) +
   geom_sf(data = intersections, col = "red", alpha = 0, lwd = 0.4) +
   scale_fill_viridis_d() +
-  theme_minimal() +
+  coord_sf(crs = st_crs(5070)) +
+  theme_bw() +
   theme(legend.position = "bottom", legend.title=element_text(size=10))
 
 yfit_pmeans_map <- ggplot() +
-  geom_sf(data = county_sf) +
-  geom_sf(data = yfit_pmeans_sf, aes(fill = y_pmeans)) +
-  scale_fill_viridis_d(name = "Y Posterior Mean", drop = FALSE) +
+  geom_sf(data = county_sf, col = "gray") +
+  geom_sf(data = yfit_pmeans_sf, aes(fill = y_pmeans), col = "gray") +
+  scale_fill_viridis_d(name = "Y posterior mean", drop = FALSE) +
   geom_sf(data = intersections, col = "red", alpha = 0, lwd = 0.4) +
-  theme_minimal() +
+  coord_sf(crs = st_crs(5070)) +
+  theme_bw() +
   theme(legend.position = "bottom", legend.title=element_text(size=10))
 yfit_pmeans_map
 rho_hist <- ggplot() +
@@ -272,7 +283,7 @@ params_summary <- apply(params_sim, MARGIN = 2, function(x) {
 round_digits <- 3
 params_summary[, `:=`(
   Parameter = c("$\\beta_0$", "$\\beta_1$", "$\\sigma^2$", "$\\rho$"),
-  Description = c("Intercept", "Smoking Prevalence", "Total Variance", "Spatial Proportion of Variance"),
+  Description = c("Intercept", "Smoking prevalence", "Total variance", "Spatial proportion of variance"),
   `Mean` = round(mean, digits = round_digits),
   `95\\% Credible Interval` = paste0("(", round(lower, digits = round_digits), ", ",
                     round(upper, digits = round_digits), ")")
