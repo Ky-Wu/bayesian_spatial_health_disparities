@@ -52,11 +52,13 @@ public:
     matrix_NN = -1 * matrix_pN.t() * matrix_pN;
     matrix_NN.diag() += 1;
     // simultaneous diagonalization of Q and I - H
-    // Q^0.5 * (I - H) * Q^0.5
+    // Q^{-1/2} * (I - H) * Q^{-1/2}
     matrix_NN = U * matrix_NN * U;
     eig_sym(D, C, matrix_NN);
     U = U * C;
+    Uty = U.t() * y;
     UtX = U.t() * X;
+    Xty = X.t() * y;
     // e := y - X * beta_ols
     // r := y - X * beta - gamma
     e = y - X * beta_ols;
@@ -218,9 +220,8 @@ public:
   void updateBeta() {
     // E(beta | y, phi, sigma2, rho) = beta_ols - (X'X)^(-1)X'gamma
     // = (X'X)^(-1)X'(y - gamma)
-    vec_N = y - gamma;
     // use beta temporarily
-    beta = X.t() * vec_N;
+    beta = Xty - X.t() * gamma;
     vec_p = solve(trimatl(XtX_R.t()), beta);
     // var(beta | y, phi, sigma2, rho) = sigma2 * (1 - rho) (X'X)^{-1}
     vec_p += randn(p, distr_param(0.0, pow(sigma2 * (1.0 - rho), 0.5)));
@@ -233,10 +234,9 @@ public:
     // B^{-1}[y - XC^{-1}(X'Xbeta + X'B^(-1)y)]
     // C = X'X + X'B^(-1)X
     // vec_N = B^(-1)y
-    vec_N = U.t() * y;
+    vec_N = Uty;
     vec_N = (1 / ((1 - rho) / rho + D)) % vec_N;
-    vec_N = U * vec_N;
-    vec_p = X.t() * vec_N + XtX * beta;
+    vec_p = UtX.t() * vec_N + XtX * beta;
     // matrix_pp = chol(C) = chol(X'X + X'B^{-1}X)
     matrix_pN = UtX.t() * diagmat(pow((1 - rho) / rho + D, -0.5));
     matrix_pp =  matrix_pN * matrix_pN.t();
@@ -244,11 +244,10 @@ public:
     matrix_pp = chol(matrix_pp, "upper");
     vec2_p = solve(trimatl(matrix_pp.t()), vec_p);
     vec_p = solve(trimatu(matrix_pp), vec2_p);
-    gamma = y - X * vec_p;
-    gamma = U.t() * gamma;
+    gamma = Uty - UtX * vec_p;
     gamma = (1.0 / ((1.0 - rho) / rho + D)) % gamma;
     gamma = U * gamma;
-    // var(gamma | y, beta, sigma2, rho) = sigma2 * [1 / (1 - rho) * I + Q / rho]
+    // var(gamma | y, beta, sigma2, rho) = sigma2 * [1 / (1 - rho) * I + Q / rho]^{-1}
     // sigma2 * P[1 / (1 - rho) * I + 1 / rho * Lambda]^{-1}P^T
     vec_N = Lambda / rho;
     vec_N += 1.0 / (1.0 - rho);
@@ -317,9 +316,9 @@ public:
   }
 
   double KLD(double rho_star) {
-    double out = (double) -N / 2.0;
+    double out = (double) -N * rho_star / 2.0;
     out -= sum(log(rho_star / Lambda + (1 - rho_star))) / 2;
-    out += sum(rho_star / Lambda + (1 - rho_star)) / 2;
+    out += sum(rho_star / Lambda) / 2;
     return out;
   }
 
@@ -339,6 +338,8 @@ private:
   arma::mat XtX_R;
   arma::vec beta_ols;
   arma::mat UtX;
+  arma::vec Uty;
+  arma::vec Xty;
   arma::mat matrix_pN;
   arma::mat matrix_NN;
 };
