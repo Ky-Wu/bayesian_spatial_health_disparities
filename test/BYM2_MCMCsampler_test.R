@@ -252,7 +252,8 @@ names(roc_list) <- c(
   paste0("rho = ", rho)
 )
 auc <- lapply(roc_list, function(r) round(pROC::auc(r), 3))
-roc_plot <- pROC::ggroc(roc_list, aes = c("colour", "linetype")) +
+roc_plot <- pROC::ggroc(roc_list, aes = c("colour", "linetype"), linewidth = 0.8) +
+  geom_abline(intercept = 1, slope = 1, color = "darkgrey", linetype = "dotted") +
   scale_color_discrete(name = "Model") +
   scale_linetype_discrete(name = "Model") +
   theme_bw() +
