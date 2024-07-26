@@ -3,7 +3,7 @@
 This repository contains code implementation for detecting spatial disparities in a BYM2 model using the methodology discussed in the reference below.  
 
 Reference:
-> Wu, K. L., and Banerjee, S., " Assessing Spatial Disparities: A Bayesian Linear Regression Approach." Manuscript in preparation.
+> Wu, K. L., and Banerjee, S., "Assessing Spatial Disparities: A Bayesian Linear Regression Approach." Manuscript in preparation.
 
 A real data analysis example is included to showcase detecting disparities in estimates of lung cancer mortality rates in 2014 between neighboring US counties after accounting for estimates of total (non-daily and daily) smoking prevalence in 2012.
 
