@@ -1,0 +1,17 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rds
+*.Rproj
+.DS_Store
+rstudio/
+data/IHME_county_cancer_mortality.XLSX
+data/US_data/
+presentation/
+bibtex/
+src/VB/
+*.docx
+test/BYM2_stan_simulation.R
+test/LG_ARDP.R
+*.Rds

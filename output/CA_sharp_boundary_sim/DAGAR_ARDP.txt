@@ -1,0 +1,68 @@
+
+    model
+    {
+
+    for (i in 1:k)
+    {
+    mu[i] <- X[i,] %*% beta + phi[i]
+    Y[i] ~ dnorm(mu[i], taue1)
+    phi[i] <- inprod(theta, u[i,])
+    Fr[i] <- pnorm(r[i], 0, 1/invQ1[i,i])
+    for(h in 2:H){
+    u[i, h] <- ifelse(Fr[i] > sum_pi[h-1] && Fr[i] < sum_pi[h], 1, 0)
+    }
+    u[i,1] <- ifelse(sum(u[i, 2:H])==0, 1, 0)
+    }
+
+
+    pi[1] <- V[1]
+    prod[1] <- 1 - pi[1]
+    for (h in 2:H){
+    prod[h] <- prod[h-1] * (1-V[h])
+    pi[h] <- V[h] * prod[h-1]
+    }
+
+    for (h in 1:H){
+    theta[h] ~ dnorm(0,taus)
+    V[h] ~ dbeta(1,alpha)
+    sum_pi[h] <- sum(pi[1:h])
+    }
+
+    for(i in 1:2){
+      Tau1[i, i] <- 1
+      for(j in 1:k){
+        B1[i,j] <- 0
+      }
+    }
+    for(l in 1:(k-1)){
+      for(m in (l+1):k){
+        Tau1[l,m] <- 0
+      }
+    }
+    Tau1[2,1] <- 0
+    for (i in 3:k){
+      Tau1[i,i] <- (1 + (ns[i-1] - 1) * rho1^2) / (1 - rho1^2)
+      for(m in 1:(i-1)){
+        Tau1[i,m] <- 0
+      }
+      b1[i] <- rho1 / (1 + (ns[i-1] - 1) * rho1^2)
+      for(j in (udnei[(cn[i-1] + 1):(cn[i-1] + ns[i-1])])){
+      B1[i,j] <- b1[i]
+    }
+      for(j in index1[((k)*(i-3)-cn[i-1]+1) : ((k)*(i-3)-cn[i-1] + (k - ns[i-1]))]){
+      B1[i,j] <- 0
+      }
+    }
+
+    Q1 <- tau1 * t(Ik - B1) %*% Tau1 %*% (Ik - B1)
+    r[1:k] ~ dmnorm(rep(0, k), Q1)
+    invQ1 <- inverse(Q1)
+
+    rho1 ~ dunif(0, 0.98)
+    tau1 ~ dgamma(2, 0.1)
+    taue1 ~ dgamma(2, 0.1)
+    vare1 <- 1/taue1
+    taus ~ dgamma(2,1)
+    beta[1:ncolumn] ~ dmnorm(rep(0,ncolumn), (0.0001*I));
+    }
+    
