@@ -1,0 +1,77 @@
+---
+title: "Selection of Lambda in Rho Prior"
+author: "Kyle Lin Wu"
+bibliography: "../../bibtex/epsilon_spatial_differences.bib"
+output: 
+  pdf_document:
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+knitr::opts_knit$set(root.dir = file.path(getwd(), "..", ".."))
+```
+
+In this RMD file, we select an appropriate value for the $\lambda$ hyperparameter of the penalized complexity prior for both the simulation example in Section 4 and the data analysis in Section 5. The penalized complexity prior was introduced in @simpsonPenalisingModelComponent2017, and we place this prior on $\rho$, which controls the spatial proportion of total variance in the BYM2 model. We select $\lambda$ from a dense sequence such that $\mathbb{P}\left(\rho \leq \frac{1}{2}\right) \approx \frac{2}{3}$.
+
+# Load Packages and Helper Functions
+
+```{r}
+library(data.table)
+library(Rcpp)
+library(RcppArmadillo)
+library(ggplot2)
+rm(list = ls())
+
+# helper functions to sample from PC prior given spatial variance structure
+source(file.path(getwd(), "src", "R", "pc_selection_helper_functions.R"))
+```
+
+# Simulation Selection
+
+```{r}
+# simulation selection of lambda_rho
+source(file.path(getwd(), "src", "R", "simulation", "US_data_generation.R"))
+Q_eigen <- eigen(Q_scaled)
+Lambda <- Q_eigen$values
+```
+
+```{r}
+set.seed(1130)
+alpha <- 2/3
+U <- 0.5
+l_seq <- seq(0.02, 0.05, by = .0015)
+# alpha = P(rho <= U)
+alphas <- vapply(l_seq, function(target_l) {
+  mean(samplePCPrior(10000, Lambda, target_l) <= U)
+}, numeric(1))
+# select lambda such that P(rho <= U) is about alpha
+min(l_seq[alphas >= alpha])
+```
+
+# Lung Cancer Analysis Selection
+
+```{r}
+# US lung mortality RDA selection of lambda_rho
+# Read in and setup lung + smoking data
+source(file.path(getwd(), "src", "R", "RDA", "US_data_setup.R"))
+Q_eigen <- eigen(Q_scaled)
+Lambda <- Q_eigen$values
+```
+
+```{r}
+set.seed(1130)
+alpha <- 2/3
+U <- 0.5
+l_seq <- seq(0.02, 0.05, by = .0015)
+# alpha = P(rho <= U)
+alphas <- vapply(l_seq, function(target_l) {
+  mean(samplePCPrior(10000, Lambda, target_l) <= U)
+}, numeric(1))
+# select lambda such that P(rho <= U) is about alpha
+min(l_seq[alphas >= alpha])
+```
+
+# References
+
+<div id="refs"></div>
