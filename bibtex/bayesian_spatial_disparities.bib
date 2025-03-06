@@ -1,0 +1,898 @@
+@misc{archerBayesianEntropyEstimation2014,
+  title = {Bayesian {{Entropy Estimation}} for {{Countable Discrete Distributions}}},
+  author = {Archer, Evan and Park, Il Memming and Pillow, Jonathan},
+  year = {2014},
+  month = apr,
+  number = {arXiv:1302.0328},
+  eprint = {1302.0328},
+  primaryclass = {cs, math},
+  publisher = {arXiv},
+  doi = {10.48550/arXiv.1302.0328},
+  urldate = {2024-02-03},
+  abstract = {We consider the problem of estimating Shannon's entropy \$H\$ from discrete data, in cases where the number of possible symbols is unknown or even countably infinite. The Pitman-Yor process, a generalization of Dirichlet process, provides a tractable prior distribution over the space of countably infinite discrete distributions, and has found major applications in Bayesian non-parametric statistics and machine learning. Here we show that it also provides a natural family of priors for Bayesian entropy estimation, due to the fact that moments of the induced posterior distribution over \$H\$ can be computed analytically. We derive formulas for the posterior mean (Bayes' least squares estimate) and variance under Dirichlet and Pitman-Yor process priors. Moreover, we show that a fixed Dirichlet or Pitman-Yor process prior implies a narrow prior distribution over \$H\$, meaning the prior strongly determines the entropy estimate in the under-sampled regime. We derive a family of continuous mixing measures such that the resulting mixture of Pitman-Yor processes produces an approximately flat prior over \$H\$. We show that the resulting Pitman-Yor Mixture (PYM) entropy estimator is consistent for a large class of distributions. We explore the theoretical properties of the resulting estimator, and show that it performs well both in simulation and in application to real data.},
+  archiveprefix = {arxiv},
+  keywords = {Computer Science - Information Theory},
+  file = {/Users/kylel/Zotero/storage/JPQMPB7D/Archer et al. - 2014 - Bayesian Entropy Estimation for Countable Discrete.pdf;/Users/kylel/Zotero/storage/7ZIVVR96/1302.html}
+}
+
+@book{banerjeeHierarchicalModelingAnalysis2015,
+  title = {Hierarchical {{Modeling}} and {{Analysis}} for {{Spatial Data}}},
+  author = {Banerjee, Sudipto and Carlin, Bradley P. and Gelfand, Alan E.},
+  year = {2015},
+  series = {Monographs on Statistics and Applied Probability},
+  edition = {Second},
+  number = {135},
+  publisher = {CRC Press, Taylor \& Francis Group},
+  address = {Boca Raton},
+  isbn = {978-1-4398-1917-3},
+  lccn = {QA278.2 .B36 2015},
+  keywords = {Mathematical models,Spatial analysis (Statistics)}
+}
+
+@book{banerjeeLinearAlgebraMatrix2014,
+  title = {Linear Algebra and Matrix Analysis for Statistics},
+  author = {Banerjee, Sudipto and Roy, Anindya},
+  year = {2014},
+  edition = {1st edition},
+  publisher = {CRC Press, Taylor \& Francis Group},
+  address = {Boca Raton},
+  abstract = {Matrices, Vectors, and Their OperationsBasic definitions and notations Matrix addition and scalar-matrix multiplication Matrix multiplication Partitioned matricesThe ""trace"" of a square matrix Some special matricesSystems of Linear EquationsIntroduction Gaussian elimination Gauss-Jordan elimination Elementary matrices Homogeneous linear systems The inverse of a matrixMore on Linear EquationsThe LU decompositionCrout's Algorithm LU decomposition with row interchanges The LDU and Cholesky factorizations Inverse of partitioned matrices The LDU decomposition for partitioned matricesThe Sherman-W},
+  isbn = {978-0-429-17413-1},
+  langid = {english},
+  annotation = {OCLC: 1300608673}
+}
+
+@article{banerjeeModelingMassiveSpatial2020a,
+  title = {Modeling Massive Spatial Datasets Using a Conjugate {{Bayesian}} Linear Modeling Framework},
+  author = {Banerjee, Sudipto},
+  year = {2020},
+  month = jun,
+  journal = {Spatial Statistics},
+  series = {Frontiers in {{Spatial}} and {{Spatio-temporal Research}}},
+  volume = {37},
+  pages = {100417},
+  issn = {2211-6753},
+  doi = {10.1016/j.spasta.2020.100417},
+  urldate = {2024-03-04},
+  abstract = {Geographic Information Systems (GIS) and related technologies have generated substantial interest among statisticians with regard to scalable methodologies for analyzing large spatial datasets. A variety of scalable spatial process models have been proposed that can be easily embedded within a hierarchical modeling framework to carry out Bayesian inference. While the focus of statistical research has mostly been directed toward innovative and more complex model development, relatively limited attention has been accorded to approaches for easily implementable scalable hierarchical models for the practicing scientist or spatial analyst. This article discusses how point-referenced spatial process models can be cast as a conjugate Bayesian linear regression that can rapidly deliver inference on spatial processes. The approach allows exact sampling directly (avoids iterative algorithms such as Markov chain Monte Carlo) from the joint posterior distribution of regression parameters, the latent process and the predictive random variables, and can be easily implemented on statistical programming environments such as R.},
+  keywords = {Bayesian linear regression,Exact sampling-based inference,Gaussian process,Low-rank models,Nearest-Neighbor Gaussian Processes,Sparse models},
+  file = {/Users/kylel/Zotero/storage/MBC7CEKB/Banerjee - 2020 - Modeling massive spatial datasets using a conjugat.pdf;/Users/kylel/Zotero/storage/4J86X4U4/S2211675320300117.html}
+}
+
+@article{benjaminiControlFalseDiscovery2001,
+  title = {The Control of the False Discovery Rate in Multiple Testing under Dependency},
+  author = {Benjamini, Yoav and Yekutieli, Daniel},
+  year = {2001},
+  month = aug,
+  journal = {The Annals of Statistics},
+  volume = {29},
+  number = {4},
+  pages = {1165--1188},
+  issn = {0090-5364, 2168-8966},
+  doi = {10.1214/aos/1013699998},
+  urldate = {2023-10-27},
+  abstract = {Benjamini and Hochberg suggest that the false discovery rate may be the appropriate error rate to control in many applied multiple testing problems. A simple procedure was given there as an FDR controlling procedure for independent test statistics and was shown to be much more powerful than comparable procedures which control the traditional familywise error rate. We prove that this same procedure also controls the false discovery rate when the test statistics have positive regression dependency on each of the test statistics corresponding to the true null hypotheses. This condition for positive dependency is general enough to cover many problems of practical interest, including the comparisons of many treatments with a single control, multivariate normal test statistics with positive correlation matrix and multivariate \$t\$. Furthermore, the test statistics may be discrete, and the tested hypotheses composite without posing special difficulties. For all other forms of dependency, a simple conservative modification of the procedure controls the false discovery rate. Thus the range of problems for which a procedure with proven FDR control can be offered is greatly increased.}
+}
+
+@article{benjaminiControllingFalseDiscovery1995,
+  title = {Controlling the {{False Discovery Rate}}: {{A Practical}} and {{Powerful Approach}} to {{Multiple Testing}}},
+  shorttitle = {Controlling the {{False Discovery Rate}}},
+  author = {Benjamini, Yoav and Hochberg, Yosef},
+  year = {1995},
+  journal = {Journal of the Royal Statistical Society: Series B (Methodological)},
+  volume = {57},
+  number = {1},
+  pages = {289--300},
+  issn = {2517-6161},
+  doi = {10.1111/j.2517-6161.1995.tb02031.x},
+  urldate = {2023-10-23},
+  abstract = {The common approach to the multiplicity problem calls for controlling the familywise error rate (FWER). This approach, though, has faults, and we point out a few. A different approach to problems of multiple significance testing is presented. It calls for controlling the expected proportion of falsely rejected hypotheses --- the false discovery rate. This error rate is equivalent to the FWER when all hypotheses are true but is smaller otherwise. Therefore, in problems where the control of the false discovery rate rather than that of the FWER is desired, there is potential for a gain in power. A simple sequential Bonferronitype procedure is proved to control the false discovery rate for independent test statistics, and a simulation study shows that the gain in power is substantial. The use of the new procedure and the appropriateness of the criterion are illustrated with examples.},
+  copyright = {{\copyright} 1995 Royal Statistical Society},
+  langid = {english},
+  keywords = {bonferroni-type procedures,familywise error rate,multiple-comparison procedures,p-values},
+  file = {/Users/kylel/Zotero/storage/SMSDSLR3/j.2517-6161.1995.tb02031.html}
+}
+
+@article{besagBayesianImageRestoration1991,
+  title = {Bayesian Image Restoration, with Two Applications in Spatial Statistics},
+  author = {Besag, Julian and York, Jeremy and Molli{\'e}, Annie},
+  year = {1991},
+  month = mar,
+  journal = {Annals of the Institute of Statistical Mathematics},
+  volume = {43},
+  number = {1},
+  pages = {1--20},
+  issn = {1572-9052},
+  doi = {10.1007/BF00116466},
+  urldate = {2023-11-21},
+  abstract = {There has been much recent interest in Bayesian image analysis, including such topics as removal of blur and noise, detection of object boundaries, classification of textures, and reconstruction of two- or three-dimensional scenes from noisy lower-dimensional views. Perhaps the most straightforward task is that of image restoration, though it is often suggested that this is an area of relatively minor practical importance. The present paper argues the contrary, since many problems in the analysis of spatial data can be interpreted as problems of image restoration. Furthermore, the amounts of data involved allow routine use of computer intensive methods, such as the Gibbs sampler, that are not yet practicable for conventional images. Two examples are given, one in archeology, the other in epidemiology. These are preceded by a partial review of pixel-based Bayesian image analysis.},
+  langid = {english},
+  keywords = {archeology,Bayesian restoration,epidemiology,Gibbs sampler,image analysis,spatial statistics},
+  file = {/Users/kylel/Zotero/storage/M3WN88MU/Besag et al. - 1991 - Bayesian image restoration, with two applications .pdf}
+}
+
+@article{dwyer-lindgrenCigaretteSmokingPrevalence2014,
+  title = {Cigarette Smoking Prevalence in {{US}} Counties: 1996-2012},
+  shorttitle = {Cigarette Smoking Prevalence in {{US}} Counties},
+  author = {{Dwyer-Lindgren}, Laura and Mokdad, Ali H. and Srebotnjak, Tanja and Flaxman, Abraham D. and Hansen, Gillian M. and Murray, Christopher JL},
+  year = {2014},
+  month = mar,
+  journal = {Population Health Metrics},
+  volume = {12},
+  number = {1},
+  pages = {5},
+  issn = {1478-7954},
+  doi = {10.1186/1478-7954-12-5},
+  urldate = {2024-02-12},
+  abstract = {Cigarette smoking is a leading risk factor for morbidity and premature mortality in the United States, yet information about smoking prevalence and trends is not routinely available below the state level, impeding local-level action.},
+  keywords = {BRFSS,Disparities,Geographic patterns,Small area estimation,Smoking,Tobacco},
+  file = {/Users/kylel/Zotero/storage/LQ3ZKTW3/Dwyer-Lindgren et al. - 2014 - Cigarette smoking prevalence in US counties 1996-.pdf;/Users/kylel/Zotero/storage/LSEHH3Z8/1478-7954-12-5.html}
+}
+
+@article{efronEmpiricalBayesAnalysis2001,
+  title = {Empirical {{Bayes Analysis}} of a {{Microarray Experiment}}},
+  author = {Efron, Bradley and Tibshirani, Robert and Storey, John D and Tusher, Virginia},
+  year = {2001},
+  month = dec,
+  journal = {Journal of the American Statistical Association},
+  volume = {96},
+  number = {456},
+  pages = {1151--1160},
+  publisher = {Taylor \& Francis},
+  issn = {0162-1459},
+  doi = {10.1198/016214501753382129},
+  urldate = {2023-10-29},
+  abstract = {Microarrays are a novel technology that facilitates the simultaneous measurement of thousands of gene expression levels. A typical microarray experiment can produce millions of data points, raising serious problems of data reduction, and simultaneous inference. We consider one such experiment in which oligonucleotide arrays were employed to assess the genetic effects of ionizing radiation on seven thousand human genes. A simple nonparametric empirical Bayes model is introduced, which is used to guide the efficient reduction of the data to a single summary statistic per gene, and also to make simultaneous inferences concerning which genes were affected by the radiation. Although our focus is on one specific experiment, the proposed methods can be applied quite generally. The empirical Bayes inferences are closely related to the frequentist false discovery rate (FDR) criterion.},
+  file = {/Users/kylel/Zotero/storage/NXV7GFY7/Efron et al. - 2001 - Empirical Bayes Analysis of a Microarray Experimen.pdf}
+}
+
+@article{fitzpatrickEcologicalBoundaryDetection2010,
+  title = {Ecological Boundary Detection Using {{Bayesian}} Areal Wombling},
+  author = {Fitzpatrick, Matthew C. and Preisser, Evan L. and Porter, Adam and Elkinton, Joseph and Waller, Lance A. and Carlin, Bradley P. and Ellison, Aaron M.},
+  year = {2010},
+  month = dec,
+  journal = {Ecology},
+  volume = {91},
+  number = {12},
+  pages = {3448--3514},
+  issn = {0012-9658},
+  urldate = {2024-02-25},
+  abstract = {The study of ecological boundaries and their dynamics is of fundamental importance to much of ecology, biogeography, and evolution. Over the past two decades, boundary analysis (of which wombling is a subfield) has received considerable research attention, resulting in multiple approaches for the quantification of ecological boundaries. Nonetheless, few methods have been developed that can simultaneously (1) analyze spatially homogenized data sets (i.e., areal data in the form of polygons rather than point-reference data); (2) account for spatial structure in these data and uncertainty associated with them; and (3) objectively assign probabilities to boundaries once detected. Here we describe the application of a Bayesian hierarchical framework for boundary detection developed in public health, which addresses these issues but which has seen limited application in ecology. As examples, we analyze simulated spread data and the historic pattern of spread of an invasive species, the hemlock woolly adelgid (Adelges tsugae), using county-level summaries of the year of first reported infestation and several covariates potentially important to influencing the observed spread dynamics. Bayesian areal wombling is a promising approach for analyzing ecological boundaries and dynamics related to changes in the distributions of native and invasive species.},
+  pmcid = {PMC4024662},
+  pmid = {21302814},
+  file = {/Users/kylel/Zotero/storage/HQZE9CE7/Fitzpatrick et al. - 2010 - Ecological boundary detection using Bayesian areal.pdf}
+}
+
+@article{gaoSpatialDifferenceBoundary2023,
+  title = {Spatial {{Difference Boundary Detection}} for {{Multiple Outcomes Using Bayesian Disease Mapping}}},
+  author = {Gao, Leiwen and Banerjee, Sudipto and Ritz, Beate},
+  year = {2023},
+  month = oct,
+  journal = {Biostatistics},
+  volume = {24},
+  number = {4},
+  pages = {922--944},
+  issn = {1465-4644},
+  doi = {10.1093/biostatistics/kxac013},
+  urldate = {2023-11-21},
+  abstract = {Regional aggregates of health outcomes over delineated administrative units (e.g., states, counties, and zip codes), or areal units, are widely used by epidemiologists to map mortality or incidence rates and capture geographic variation. To capture health disparities over regions, we seek ``difference boundaries'' that separate neighboring regions with significantly different spatial effects. Matters are more challenging with multiple outcomes over each unit, where we capture dependence among diseases as well as across the areal units. Here, we address multivariate difference boundary detection for correlated diseases. We formulate the problem in terms of Bayesian pairwise multiple comparisons and seek the posterior probabilities of neighboring spatial effects being different. To achieve this, we endow the spatial random effects with a discrete probability law using a class of multivariate areally referenced Dirichlet process models that accommodate spatial and interdisease dependence. We evaluate our method through simulation studies and detect difference boundaries for multiple cancers using data from the Surveillance, Epidemiology, and End Results Program of the National Cancer Institute.},
+  file = {/Users/kylel/Zotero/storage/PDDX5ZMH/Gao et al. - 2023 - Spatial Difference Boundary Detection for Multiple.pdf;/Users/kylel/Zotero/storage/RDCQU6ID/6600528.html}
+}
+
+@article{gelmanPriorDistributionsVariance2006,
+  title = {Prior Distributions for Variance Parameters in Hierarchical Models (Comment on Article by {{Browne}} and {{Draper}})},
+  author = {Gelman, Andrew},
+  year = {2006},
+  month = sep,
+  journal = {Bayesian Analysis},
+  volume = {1},
+  number = {3},
+  pages = {515--534},
+  publisher = {International Society for Bayesian Analysis},
+  issn = {1936-0975, 1931-6690},
+  doi = {10.1214/06-BA117A},
+  urldate = {2024-02-24},
+  abstract = {Various noninformative prior distributions have been suggested for scale parameters in hierarchical models. We construct a new folded-noncentral-\$t\$ family of conditionally conjugate priors for hierarchical standard deviation parameters, and then consider noninformative and weakly informative priors in this family. We use an example to illustrate serious problems with the inverse-gamma family of "noninformative" prior distributions. We suggest instead to use a uniform prior on the hierarchical standard deviation, using the half-\$t\$ family when the number of groups is small and in other settings where a weakly informative prior is desired. We also illustrate the use of the half-\$t\$ family for hierarchical modeling of multiple variance parameters such as arise in the analysis of variance.},
+  keywords = {Bayesian inference,conditional conjugacy,folded-noncentral-$t$ distribution,half-$t$ distribution,hierarchical model,multilevel model,noninformative prior distribution,weakly informative prior distribution},
+  file = {/Users/kylel/Zotero/storage/AQ2UTB95/Gelman - 2006 - Prior distributions for variance parameters in hie.pdf}
+}
+
+@article{gelmanUnderstandingPredictiveInformation2014,
+  title = {Understanding Predictive Information Criteria for {{Bayesian}} Models},
+  author = {Gelman, Andrew and Hwang, Jessica and Vehtari, Aki},
+  year = {2014},
+  month = nov,
+  journal = {Statistics and Computing},
+  volume = {24},
+  number = {6},
+  pages = {997--1016},
+  issn = {1573-1375},
+  doi = {10.1007/s11222-013-9416-2},
+  urldate = {2024-02-19},
+  abstract = {We review the Akaike, deviance, and Watanabe-Akaike information criteria from a Bayesian perspective, where the goal is to estimate expected out-of-sample-prediction error using a bias-corrected adjustment of within-sample error. We focus on the choices involved in setting up these measures, and we compare them in three simple examples, one theoretical and two applied. The contribution of this paper is to put all these information criteria into a Bayesian predictive context and to better understand, through small examples, how these methods can apply in practice.},
+  langid = {english},
+  keywords = {AIC,Bayes,Cross-validation,DIC,Prediction,WAIC},
+  file = {/Users/kylel/Zotero/storage/E9YGM4LG/Gelman et al. - 2014 - Understanding predictive information criteria for .pdf}
+}
+
+@article{greenlandBayesianPerspectivesEpidemiological2006,
+  title = {Bayesian Perspectives for Epidemiological Research: {{I}}. {{Foundations}} and Basic Methods},
+  shorttitle = {Bayesian Perspectives for Epidemiological Research},
+  author = {Greenland, Sander},
+  year = {2006},
+  month = jun,
+  journal = {International Journal of Epidemiology},
+  volume = {35},
+  number = {3},
+  pages = {765--775},
+  issn = {0300-5771},
+  doi = {10.1093/ije/dyi312},
+  urldate = {2023-10-29},
+  abstract = {One misconception (of many) about Bayesian analyses is that prior distributions introduce assumptions that are more questionable than assumptions made by frequentist methods; yet the assumptions in priors can be more reasonable than the assumptions implicit in standard frequentist models. Another misconception is that Bayesian methods are computationally difficult and require special software. But perfectly adequate Bayesian analyses can be carried out with common software for frequentist analysis. Under a wide range of priors, the accuracy of these approximations is just as good as the frequentist accuracy of the software---and more than adequate for the inaccurate observational studies found in health and social sciences. An easy way to do Bayesian analyses is via inverse-variance (information) weighted averaging of the prior with the frequentist estimate. A more general method expresses the prior distributions in the form of prior data or `data equivalents', which are then entered in the analysis as a new data stratum. That form reveals the strength of the prior judgements being introduced and may lead to tempering of those judgements. It is argued that a criterion for scientific acceptability of a prior distribution is that it be expressible as prior data, so that the strength of prior assumptions can be gauged by how much data they represent.},
+  file = {/Users/kylel/Zotero/storage/6ALW2M79/Greenland - 2006 - Bayesian perspectives for epidemiological research.pdf;/Users/kylel/Zotero/storage/UTXQERB4/735529.html}
+}
+
+@article{jaynesInformationTheoryStatistical1957,
+  title = {Information {{Theory}} and {{Statistical Mechanics}}},
+  author = {Jaynes, E. T.},
+  year = {1957},
+  month = may,
+  journal = {Physical Review},
+  volume = {106},
+  number = {4},
+  pages = {620--630},
+  issn = {0031-899X},
+  doi = {10.1103/PhysRev.106.620},
+  urldate = {2024-01-23},
+  langid = {english}
+}
+
+@article{leeBoundaryDetectionDisease2012,
+  title = {Boundary Detection in Disease Mapping Studies},
+  author = {Lee, Duncan and Mitchell, Richard},
+  year = {2012},
+  month = jul,
+  journal = {Biostatistics},
+  volume = {13},
+  number = {3},
+  pages = {415--426},
+  issn = {1465-4644},
+  doi = {10.1093/biostatistics/kxr036},
+  urldate = {2024-02-25},
+  abstract = {In disease mapping, the aim is to estimate the spatial pattern in disease risk over an extended geographical region, so that areas with elevated risks can be identified. A Bayesian hierarchical approach is typically used to produce such maps, which represents the risk surface with a set of random effects that exhibit a single global level of spatial smoothness. However, in complex urban settings, the risk surface is likely to exhibit localized rather than global spatial structure, including areas where the risk varies smoothly over space, as well as boundaries separating populations that are geographically adjacent but have very different risk profiles. Therefore, this paper proposes an approach for capturing localized spatial structure, including the identification of such risk boundaries. The effectiveness of the approach is tested by simulation, before being applied to lung cancer incidence data in Greater Glasgow, UK, between 2001 and 2005.},
+  file = {/Users/kylel/Zotero/storage/FCNZ33LV/Lee and Mitchell - 2012 - Boundary detection in disease mapping studies.pdf;/Users/kylel/Zotero/storage/LSWSAQ72/248273.html}
+}
+
+@article{liBayesianModelsDetecting2015a,
+  title = {Bayesian {{Models}} for {{Detecting Difference Boundaries}} in {{Areal Data}}},
+  author = {Li, Pei and Banerjee, Sudipto and Hanson, Timothy A. and McBean, Alexander M.},
+  year = {2015},
+  journal = {Statistica Sinica},
+  volume = {25},
+  number = {1},
+  eprint = {24311022},
+  eprinttype = {jstor},
+  pages = {385--402},
+  publisher = {Institute of Statistical Science, Academia Sinica},
+  issn = {1017-0405},
+  urldate = {2023-12-07},
+  abstract = {With increasing accessibility to Geographical Information Systems (GIS) software, researchers and administrators in public health routinely encounter areal data compiled as aggregates over areal regions, such as counts or rates across counties in a state. Spatial models for areal data attempt to deliver smoothed maps by accounting for high variability in certain regions. Subsequently, inferential interest is focused upon formally identifying the "difference edges" or " difference boundaries" on the map that delineate adjacent regions with vastly disparate outcomes, perhaps caused by latent risk factors. We propose nonparametric Bayesian models for areal data that can formally identify boundaries between disparate neighbors. After elucidating these models and their estimation methods, we resort to simulation experiments to assess their effectiveness, and subsequently analyze Pneumonia and Influenza hospitalization maps from the SEER-Medicare program in Minnesota, where we detect and report highly disparate neighboring counties.},
+  file = {/Users/kylel/Zotero/storage/U39IRNYV/Li et al. - 2015 - Bayesian Models for Detecting Difference Boundarie.pdf}
+}
+
+@article{liMiningBoundaryEffects2011a,
+  title = {Mining {{Boundary Effects}} in {{Areally Referenced Spatial Data Using}} the {{Bayesian Information Criterion}}},
+  author = {Li, Pei and Banerjee, Sudipto and McBean, Alexander M.},
+  year = {2011},
+  month = jul,
+  journal = {GeoInformatica},
+  volume = {15},
+  number = {3},
+  pages = {435--454},
+  issn = {1384-6175},
+  doi = {10.1007/s10707-010-0109-0},
+  urldate = {2024-02-25},
+  abstract = {Statistical models for areal data are primarily used for smoothing maps revealing spatial trends. Subsequent interest often resides in the formal identification of `boundaries' on the map. Here boundaries refer to `difference boundaries', representing significant differences between adjacent regions. Recently, Lu and Carlin (2004) discussed a Bayesian framework to carry out edge detection employing a spatial hierarchical model that is estimated using Markov chain Monte Carlo (MCMC) methods. Here we offer an alternative that avoids MCMC and is easier to implement. Our approach resembles a model comparison problem where the models correspond to different underlying edge configurations across which we wish to smooth (or not). We incorporate these edge configurations in spatially autoregressive models and demonstrate how the Bayesian Information Criteria (BIC) can be used to detect difference boundaries in the map. We illustrate our methods with a Minnesota Pneumonia amd Influenza Hospitalization dataset to elicit boundaries detected from the different models.},
+  pmcid = {PMC3107044},
+  pmid = {21643463},
+  file = {/Users/kylel/Zotero/storage/ZV8XBNWQ/Li et al. - 2011 - Mining Boundary Effects in Areally Referenced Spat.pdf}
+}
+
+@article{luBayesianArealWombling2005a,
+  title = {Bayesian {{Areal Wombling}} for {{Geographical Boundary Analysis}}},
+  author = {Lu, Haolan and Carlin, Bradley P.},
+  year = {2005},
+  journal = {Geographical Analysis},
+  volume = {37},
+  number = {3},
+  pages = {265--285},
+  issn = {1538-4632},
+  doi = {10.1111/j.1538-4632.2005.00624.x},
+  urldate = {2024-02-25},
+  abstract = {In the analysis of spatially referenced data, interest often focuses not on prediction of the spatially indexed variable itself, but on boundary analysis, that is, the determination of boundaries on the map that separate areas of higher and lower values. Existing boundary analysis methods are sometimes generically referred to as wombling, after a foundational article by Womble (1951). When data are available at point level (e.g., exact latitude and longitude of disease cases), such boundaries are most naturally obtained by locating the points of steepest ascent or descent on the fitted spatial surface (Banerjee, Gelfand, and Sirmans 2003). In this article, we propose related methods for areal data (i.e., data which consist only of sums or averages over geopolitical regions). Such methods are valuable in determining boundaries for data sets that, perhaps due to confidentiality concerns, are available only in ecological (aggregated) format, or are only collected this way (e.g., delivery of health-care or cost information). After a brief review of existing algorithmic techniques (including that implemented in the commercial software BoundarySeer), we propose a fully model-based framework for areal wombling, using Bayesian hierarchical models with posterior summaries computed using Markov chain Monte Carlo methods. We explore the suitability of various existing hierarchical and spatial software packages (notably S-plus and WinBUGS) to the task, and show the approach's superiority over existing nonstochastic alternatives, both in terms of utility and average mean square error behavior. We also illustrate our methods (as well as the solution of advanced modeling issues such as simultaneous inference) using colorectal cancer late detection data collected at the county level in the state of Minnesota.},
+  langid = {english},
+  file = {/Users/kylel/Zotero/storage/VLDRQ6T6/Lu and Carlin - 2005 - Bayesian Areal Wombling for Geographical Boundary .pdf;/Users/kylel/Zotero/storage/SJLIPRPT/j.1538-4632.2005.00624.html}
+}
+
+@article{luBayesianArealWombling2007a,
+  title = {Bayesian Areal Wombling via Adjacency Modeling},
+  author = {Lu, Haolan and Reilly, Cavan S. and Banerjee, Sudipto and Carlin, Bradley P.},
+  year = {2007},
+  month = dec,
+  journal = {Environmental and Ecological Statistics},
+  volume = {14},
+  number = {4},
+  pages = {433--452},
+  issn = {1573-3009},
+  doi = {10.1007/s10651-007-0029-9},
+  urldate = {2024-02-25},
+  abstract = {Recently, public health professionals and other geostatistical researchers have shown increasing interest in boundary analysis, the detection or testing of zones or boundaries that reveal sharp changes in the values of spatially oriented variables. For areal data (i.e., data which consist only of sums or averages over geopolitical regions), Lu and Carlin (Geogr Anal 37: 265--285, 2005) suggested a fully model-based framework for areal wombling using Bayesian hierarchical models with posterior summaries computed using Markov chain Monte Carlo (MCMC) methods, and showed the approach to have advantages over existing non-stochastic alternatives. In this paper, we develop Bayesian areal boundary analysis methods that estimate the spatial neighborhood structure using the value of the process in each region and other variables that indicate how similar two regions are. Boundaries may then be determined by the posterior distribution of either this estimated neighborhood structure or the regional mean response differences themselves. Our methods do require several assumptions (including an appropriate prior distribution, a normal spatial random effect distribution, and a Bernoulli distribution for a set of spatial weights), but also deliver more in terms of full posterior inference for the boundary segments (e.g., direct probability statements regarding the probability that a particular border segment is part of the boundary). We illustrate three different remedies for the computing difficulties encountered in implementing our method. We use simulation to compare among existing purely algorithmic approaches, the Lu and Carlin (2005) method, and our new adjacency modeling methods. We also illustrate more practical modeling issues (e.g., covariate selection) in the context of a breast cancer late detection data set collected at the county level in the state of Minnesota.},
+  langid = {english},
+  keywords = {Adjacency modeling,Areal data,Conditionally autoregressive (CAR) model,Hierarchical Bayesian model,Markov chain Monte Carlo (MCMC) simulation,Spatial statistics},
+  file = {/Users/kylel/Zotero/storage/76ZUGMLW/Lu et al. - 2007 - Bayesian areal wombling via adjacency modeling.pdf}
+}
+
+@article{maBayesianMethodsDealing2018a,
+  title = {Bayesian Methods for Dealing with Missing Data Problems},
+  author = {Ma, Zhihua and Chen, Guanghui},
+  year = {2018},
+  month = sep,
+  journal = {Journal of the Korean Statistical Society},
+  volume = {47},
+  number = {3},
+  pages = {297--313},
+  issn = {2005-2863},
+  doi = {10.1016/j.jkss.2018.03.002},
+  urldate = {2024-02-25},
+  abstract = {Missing data, a common but challenging issue in most studies, may lead to biased and inefficient inferences if handled inappropriately. As a natural and powerful way for dealing with missing data, Bayesian approach has received much attention in the literature. This paper reviews the recent developments and applications of Bayesian methods for dealing with ignorable and non-ignorable missing data. We firstly introduce missing data mechanisms and Bayesian framework for dealing with missing data, and then introduce missing data models under ignorable and non-ignorable missing data circumstances based on the literature. After that, important issues of Bayesian inference, including prior construction, posterior computation, model comparison and sensitivity analysis, are discussed. Finally, several future issues that deserve further research are summarized and concluded.},
+  langid = {english},
+  keywords = {Bayesian approach,Missing data,Missing data model,Non-ignorable missing data mechanism,primary 62-02,secondary 62D99},
+  file = {/Users/kylel/Zotero/storage/Y84CVDYC/Ma and Chen - 2018 - Bayesian methods for dealing with missing data pro.pdf}
+}
+
+@article{mitchellBayesianVariableSelection1988,
+  title = {Bayesian {{Variable Selection}} in {{Linear Regression}}},
+  author = {Mitchell, T. J. and Beauchamp, J. J.},
+  year = {1988},
+  month = dec,
+  journal = {Journal of the American Statistical Association},
+  volume = {83},
+  number = {404},
+  pages = {1023--1032},
+  publisher = {Taylor \& Francis},
+  issn = {0162-1459},
+  doi = {10.1080/01621459.1988.10478694},
+  urldate = {2023-10-23},
+  abstract = {This article is concerned with the selection of subsets of predictor variables in a linear regression model for the prediction of a dependent variable. It is based on a Bayesian approach, intended to be as objective as possible. A probability distribution is first assigned to the dependent variable through the specification of a family of prior distributions for the unknown parameters in the regression model. The method is not fully Bayesian, however, because the ultimate choice of prior distribution from this family is affected by the data. It is assumed that the predictors represent distinct observables; the corresponding regression coefficients are assigned independent prior distributions. For each regression coefficient subject to deletion from the model, the prior distribution is a mixture of a point mass at 0 and a diffuse uniform distribution elsewhere, that is, a ``spike and slab'' distribution. The random error component is assigned a normal distribution with mean 0 and standard deviation {$\sigma$}, where ln({$\sigma$}) has a locally uniform noninformative prior distribution. The appropriate posterior probabilities are derived for each submodel. If the regression coefficients have identical priors, the posterior distribution depends only on the data and the parameter {$\gamma$}, which is the height of the spike divided by the height of the slab for the common prior distribution. This parameter is not assigned a probability distribution; instead, it is considered a parameter that indexes the members of a class of Bayesian methods. Graphical methods are proposed as informal guides for choosing {$\gamma$}, assessing the complexity of the response function and the strength of the individual predictor variables, and assessing the degree of uncertainty about the best submodel. The following plots against {$\gamma$} are suggested: (a) posterior probability that a particular regression coefficient is 0; (b) posterior expected number of terms in the model; (c) posterior entropy of the submodel distribution; (d) posterior predictive error; and (e) posterior probability of goodness of fit. Plots (d) and (e) are suggested as ways to choose y. The predictive error is determined using a Bayesian cross-validation approach that generates a predictive density for each observation, given all of the data except that observation, that is, a type of ``leave one out'' approach. The goodness-of-fit measure is the sum of the posterior probabilities of all submodels that pass a standard F test for goodness of fit relative to the full model, at a specified level of significance. The dependence of the results on the scaling of the variables is discussed, and some ways to choose the scaling constants are suggested. Examples based on a large data set arising from an energy-conservation study are given to demonstrate the application of the methods.},
+  keywords = {Cross-validation,Linear models,Subset selection},
+  file = {/Users/kylel/Zotero/storage/EERAU5ZS/Mitchell and Beauchamp - 1988 - Bayesian Variable Selection in Linear Regression.pdf}
+}
+
+@article{mokdadTrendsPatternsDisparities2017,
+  title = {Trends and {{Patterns}} of {{Disparities}} in {{Cancer Mortality Among US Counties}}, 1980-2014},
+  author = {Mokdad, Ali H. and {Dwyer-Lindgren}, Laura and Fitzmaurice, Christina and Stubbs, Rebecca W. and {Bertozzi-Villa}, Amelia and Morozoff, Chloe and Charara, Raghid and Allen, Christine and Naghavi, Mohsen and Murray, Christopher J. L.},
+  year = {2017},
+  month = jan,
+  journal = {JAMA},
+  volume = {317},
+  number = {4},
+  pages = {388--406},
+  issn = {0098-7484},
+  doi = {10.1001/jama.2016.20324},
+  urldate = {2024-02-19},
+  abstract = {Cancer is a leading cause of morbidity and mortality in the United States and results in a high economic burden.To estimate age-standardized mortality rates by US county from 29 cancers.Deidentified death records from the National Center for Health Statistics (NCHS) and population counts from the Census Bureau, the NCHS, and the Human Mortality Database from 1980 to 2014 were used. Validated small area estimation models were used to estimate county-level mortality rates from 29 cancers: lip and oral cavity; nasopharynx; other pharynx; esophageal; stomach; colon and rectum; liver; gallbladder and biliary; pancreatic; larynx; tracheal, bronchus, and lung; malignant skin melanoma; nonmelanoma skin cancer; breast; cervical; uterine; ovarian; prostate; testicular; kidney; bladder; brain and nervous system; thyroid; mesothelioma; Hodgkin lymphoma; non-Hodgkin lymphoma; multiple myeloma; leukemia; and all other cancers combined.County of residence.Age-standardized cancer mortality rates by county, year, sex, and cancer type.A total of 19\,511\,910 cancer deaths were recorded in the United States between 1980 and 2014, including 5\,656\,423 due to tracheal, bronchus, and lung cancer; 2\,484\,476 due to colon and rectum cancer; 1\,573\,593 due to breast cancer; 1\,077\,030 due to prostate cancer; 1\,157\,878 due to pancreatic cancer; 209\,314 due to uterine cancer; 421\,628 due to kidney cancer; 487\,518 due to liver cancer; 13\,927 due to testicular cancer; and 829\,396 due to non-Hodgkin lymphoma. Cancer mortality decreased by 20.1\% (95\% uncertainty interval [UI], 18.2\%-21.4\%) between 1980 and 2014, from 240.2 (95\% UI, 235.8-244.1) to 192.0 (95\% UI, 188.6-197.7) deaths per 100\,000 population. There were large differences in the mortality rate among counties throughout the period: in 1980, cancer mortality ranged from 130.6 (95\% UI, 114.7-146.0) per 100\,000 population in Summit County, Colorado, to 386.9 (95\% UI, 330.5-450.7) in North Slope Borough, Alaska, and in 2014 from 70.7 (95\% UI, 63.2-79.0) in Summit County, Colorado, to 503.1 (95\% UI, 464.9-545.4) in Union County, Florida. For many cancers, there were distinct clusters of counties with especially high mortality. The location of these clusters varied by type of cancer and were spread in different regions of the United States. Clusters of breast cancer were present in the southern belt and along the Mississippi River, while liver cancer was high along the Texas-Mexico border, and clusters of kidney cancer were observed in North and South Dakota and counties in West Virginia, Ohio, Indiana, Louisiana, Oklahoma, Texas, Alaska, and Illinois.Cancer mortality declined overall in the United States between 1980 and 2014. Over this same period, there were important changes in trends, patterns, and differences in cancer mortality among US counties. These patterns may inform further research into improving prevention and treatment.},
+  file = {/Users/kylel/Zotero/storage/YLQZB7B3/Mokdad et al. - 2017 - Trends and Patterns of Disparities in Cancer Morta.pdf;/Users/kylel/Zotero/storage/DTLIBETC/2598772.html}
+}
+
+@article{moranNotesContinuousStochastic1950,
+  title = {Notes on {{Continuous Stochastic Phenomena}}},
+  author = {Moran, P. A. P.},
+  year = {1950},
+  journal = {Biometrika},
+  volume = {37},
+  number = {1/2},
+  eprint = {2332142},
+  eprinttype = {jstor},
+  pages = {17--23},
+  publisher = {[Oxford University Press, Biometrika Trust]},
+  issn = {0006-3444},
+  doi = {10.2307/2332142},
+  urldate = {2024-02-19},
+  file = {/Users/kylel/Zotero/storage/I8HLFZNC/Moran - 1950 - Notes on Continuous Stochastic Phenomena.pdf}
+}
+
+@inproceedings{mullerFDRBayesianMultiple2006,
+  title = {{{FDR}} and {{Bayesian Multiple Comparisons Rules}}},
+  booktitle = {Bayesian Statistics 8: {{Proceedings}} of the Eighth Valencia International Meeting June 2--6, 2006},
+  author = {M{\"u}ller, Peter and Parmigiani, Giovanni and Rice, Kenneth},
+  year = {2007},
+  month = jul,
+  eprint = {https://academic.oup.com/book/0/chapter/422208972/chapter-pdf/52446929/isbn-9780199214655-book-part-14.pdf},
+  publisher = {Oxford University Press},
+  doi = {10.1093/oso/9780199214655.003.0014},
+  abstract = {We discuss Bayesian approaches to multiple comparison problems, using a decision theoretic perspective to critically compare competing approaches. We set up decision problems that lead to the use of FDR-based rules and generalizations. Alternative definitions of the probability model and the utility function lead to different rules and problem-specific adjustments. Using a loss function that controls realized FDR we derive an optimal Bayes rule that is a variation of the Benjamini and Hochberg (1995) procedure. The cutoff is based on increments in ordered posterior probabilities instead of ordered p-values. Throughout the discussion we take a Bayesian perspective. In particular, we focus on conditional expected FDR, conditional on the data. Variations of the probability model include explicit modeling for dependence. Variations of the utility function include weighting by the extent of a true negative and accounting for the impact in the final decision.},
+  isbn = {978-0-19-921465-5}
+}
+
+
+@article{mullerOptimalSampleSize2004,
+  title = {Optimal {{Sample Size}} for {{Multiple Testing}}},
+  author = {M{\"u}ller, Peter and Parmigiani, Giovanni and Robert, Christian and Rousseau, Judith},
+  year = {2004},
+  month = dec,
+  journal = {Journal of the American Statistical Association},
+  volume = {99},
+  number = {468},
+  pages = {990--1001},
+  publisher = {Taylor \& Francis},
+  issn = {0162-1459},
+  doi = {10.1198/016214504000001646},
+  urldate = {2023-10-25},
+  abstract = {We consider the choice of an optimal sample size for multiple-comparison problems. The motivating application is the choice of the number of microarray experiments to be carried out when learning about differential gene expression. However, the approach is valid in any application that involves multiple comparisons in a large number of hypothesis tests. We discuss two decision problems in the context of this setup: the sample size selection and the decision about the multiple comparisons. We adopt a decision-theoretic approach, using loss functions that combine the competing goals of discovering as many differentially expressed genes as possible, while keeping the number of false discoveries manageable. For consistency, we use the same loss function for both decisions. The decision rule that emerges for the multiple-comparison problem takes the exact form of the rules proposed in the recent literature to control the posterior expected falsediscovery rate. For the sample size selection, we combine the expected utility argument with an additional sensitivity analysis, reporting the conditional expected utilities and conditioning on assumed levels of the true differential expression. We recognize the resulting diagnostic as a form of statistical power facilitating interpretation and communication. As a sampling model for observed gene expression densities across genes and arrays, we use a variation of a hierarchical gamma/gamma model. But the discussion of the decision problem is independent of the chosen probability model. The approach is valid for any model that includes positive prior probabilities for the null hypotheses in the multiple comparisons and that allows for efficient marginal and posterior simulation, possibly by dependent Markov chain Monte Carlo simulation.},
+  keywords = {False-discovery rate,Genomic data analysis,Multiple comparison},
+  file = {/Users/kylel/Zotero/storage/PP388YKJ/Müller et al. - 2004 - Optimal Sample Size for Multiple Testing.pdf}
+}
+
+@misc{nationalcancerinstituteStateCancerProfiles2024,
+  title = {State {{Cancer Profiles}}},
+  shorttitle = {U.{{S}}. {{Counties Lung}} \& {{Bronchus}} in {{All Races}}, {{Both Sexes}}, {{All Ages}}, {{All Stages}}},
+  author = {{National Cancer Institute}},
+  year = {2024},
+  urldate = {2024-02-12},
+  file = {/Users/kylel/Zotero/storage/NL2XXJAI/index.html}
+}
+
+@article{paikFrequentistInferenceRandom2015,
+  title = {Frequentist {{Inference}} on {{Random Effects Based}} on {{Summarizability}}},
+  author = {Paik, Myunghee Cho and Lee, Youngjo and Ha, Il Do},
+  year = {2015},
+  journal = {Statistica Sinica},
+  volume = {25},
+  number = {3},
+  eprint = {24721223},
+  eprinttype = {jstor},
+  pages = {1107--1132},
+  publisher = {Institute of Statistical Science, Academia Sinica},
+  issn = {1017-0405},
+  urldate = {2024-02-11},
+  abstract = {Although Bayesian methodologies have been successful in drawing inference about random effects, the frequentist literature has been limited. In this paper we consider inferences on random effects in hierarchical generalized linear models from a frequentist point of view using their summarizability. We show asymptotic distributional properties for the conditional and the marginal inference when the number of subunits is large. We conduct simulation studies when the number of subunits is small to moderate. A seizure study and an infertility study are used to illustrate the conditional and the marginal inference of random effects.},
+  file = {/Users/kylel/Zotero/storage/PGA74GVP/Paik et al. - 2015 - Frequentist Inference on Random Effects Based on S.pdf}
+}
+
+@article{rieblerIntuitiveBayesianSpatial2016,
+  title = {An Intuitive {{Bayesian}} Spatial Model for Disease Mapping That Accounts for Scaling},
+  author = {Riebler, Andrea and S{\o}rbye, Sigrunn H and Simpson, Daniel and Rue, H{\aa}vard},
+  year = {2016},
+  month = aug,
+  journal = {Statistical Methods in Medical Research},
+  volume = {25},
+  number = {4},
+  pages = {1145--1165},
+  publisher = {SAGE Publications Ltd STM},
+  issn = {0962-2802},
+  doi = {10.1177/0962280216660421},
+  urldate = {2023-11-21},
+  abstract = {In recent years, disease mapping studies have become a routine application within geographical epidemiology and are typically analysed within a Bayesian hierarchical model formulation. A variety of model formulations for the latent level have been proposed but all come with inherent issues. In the classical BYM (Besag, York and Molli{\'e}) model, the spatially structured component cannot be seen independently from the unstructured component. This makes prior definitions for the hyperparameters of the two random effects challenging. There are alternative model formulations that address this confounding; however, the issue on how to choose interpretable hyperpriors is still unsolved. Here, we discuss a recently proposed parameterisation of the BYM model that leads to improved parameter control as the hyperparameters can be seen independently from each other. Furthermore, the need for a scaled spatial component is addressed, which facilitates assignment of interpretable hyperpriors and make these transferable between spatial applications with different graph structures. The hyperparameters themselves are used to define flexible extensions of simple base models. Consequently, penalised complexity priors for these parameters can be derived based on the information-theoretic distance from the flexible model to the base model, giving priors with clear interpretation. We provide implementation details for the new model formulation which preserve sparsity properties, and we investigate systematically the model performance and compare it to existing parameterisations. Through a simulation study, we show that the new model performs well, both showing good learning abilities and good shrinkage behaviour. In terms of model choice criteria, the proposed model performs at least equally well as existing parameterisations, but only the new formulation offers parameters that are interpretable and hyperpriors that have a clear meaning.},
+  langid = {english},
+  file = {/Users/kylel/Zotero/storage/ARLZSJWL/Riebler et al. - 2016 - An intuitive Bayesian spatial model for disease ma.pdf}
+}
+
+@misc{RStanInterfaceStan2023,
+  title = {{{RStan}}: The {{R}} Interface to {{Stan}}},
+  year = {2023},
+  howpublished = {Stan Development Team}
+}
+
+@article{rubinInferenceMissingData1976,
+  title = {Inference and Missing Data},
+  author = {Rubin, Donald B.},
+  year = {1976},
+  month = dec,
+  journal = {Biometrika},
+  volume = {63},
+  number = {3},
+  pages = {581--592},
+  issn = {0006-3444},
+  doi = {10.1093/biomet/63.3.581},
+  urldate = {2024-02-25},
+  abstract = {When making sampling distribution inferences about the parameter of the data, {\texttheta}, it is appropriate to ignore the process that causes missing data if the missing data are `missing at random' and the observed data are `observed at random', but these inferences are generally conditional on the observed pattern of missing data. When making direct-likelihood or Bayesian inferences about {\texttheta}, it is appropriate to ignore the process that causes missing data if the missing data are missing at random and the parameter of the missing data process is `distinct' from {\texttheta}. These conditions are the weakest general conditions under which ignoring the process that causes missing data always leads to correct inferences.},
+  file = {/Users/kylel/Zotero/storage/YKLJ9YY5/RUBIN - 1976 - Inference and missing data.pdf;/Users/kylel/Zotero/storage/IIU3LH6S/270932.html}
+}
+
+@article{scottExplorationAspectsBayesian2006,
+  title = {An Exploration of Aspects of {{Bayesian}} Multiple Testing},
+  author = {Scott, James G. and Berger, James O.},
+  year = {2006},
+  month = jul,
+  journal = {Journal of Statistical Planning and Inference},
+  series = {In {{Memory}} of {{Dr}}. {{Shanti Swarup Gupta}}},
+  volume = {136},
+  number = {7},
+  pages = {2144--2162},
+  issn = {0378-3758},
+  doi = {10.1016/j.jspi.2005.08.031},
+  urldate = {2023-10-23},
+  abstract = {There has been increased interest of late in the Bayesian approach to multiple testing (often called the multiple comparisons problem), motivated by the need to analyze DNA microarray data in which it is desired to learn which of potentially several thousand genes are activated by a particular stimulus. We study the issue of prior specification for such multiple tests; computation of key posterior quantities; and useful ways to display these quantities. A decision-theoretic approach is also considered.},
+  keywords = {Decision theory,Hierarchical models,Hyperpriors,Importance sampling,Multiple comparisons,Multiple hypothesis tests,Posterior inclusion probabilities},
+  file = {/Users/kylel/Zotero/storage/SVH66PSH/S0378375805002156.html}
+}
+
+@incollection{seberHypothesisTesting2003,
+  title = {Hypothesis {{Testing}}},
+  booktitle = {Linear {{Regression Analysis}}},
+  author = {Seber, George A.F. and Lee, Alan J.},
+  year = {2003},
+  pages = {97--118},
+  publisher = {John Wiley \& Sons, Ltd},
+  doi = {10.1002/9780471722199.ch4},
+  urldate = {2023-10-27},
+  abstract = {This chapter contains sections titled: Introduction Likelihood Ratio Test F-Test Multiple Correlation Coefficient Canonical Form for H Goodness-of-Fit Test F-Test and Projection Matrices},
+  chapter = {4},
+  isbn = {978-0-471-72219-9},
+  langid = {english},
+  keywords = {canonical form,hypothesis testing,multiple correlation,projection matrices,straight line},
+  file = {/Users/kylel/Zotero/storage/XA5GDCEQ/2003 - Hypothesis Testing.pdf;/Users/kylel/Zotero/storage/LBFGAL66/9780471722199.html}
+}
+
+@article{shannonMathematicalTheoryCommunication1948,
+  title = {A {{Mathematical Theory}} of {{Communication}}},
+  author = {Shannon, C. E.},
+  year = {1948},
+  month = jul,
+  journal = {Bell System Technical Journal},
+  volume = {27},
+  number = {3},
+  pages = {379--423},
+  issn = {00058580},
+  doi = {10.1002/j.1538-7305.1948.tb01338.x},
+  urldate = {2024-01-30},
+  langid = {english}
+}
+
+@article{shrevesGeographicPatternsLung2023,
+  title = {Geographic {{Patterns}} in {{U}}.{{S}}. {{Lung Cancer Mortality}} and {{Cigarette Smoking}}},
+  author = {Shreves, Alaina H. and Buller, Ian D. and Chase, Elizabeth and Creutzfeldt, Hannah and Fisher, Jared A. and Graubard, Barry I. and Hoover, Robert N. and Silverman, Debra T. and Devesa, Susan S. and Jones, Rena R.},
+  year = {2023},
+  month = feb,
+  journal = {Cancer Epidemiology, Biomarkers \& Prevention},
+  volume = {32},
+  number = {2},
+  pages = {193--201},
+  issn = {1055-9965},
+  doi = {10.1158/1055-9965.EPI-22-0253},
+  urldate = {2024-02-25},
+  abstract = {Despite the success of smoking cessation campaigns, lung cancer remains the leading cause of cancer death in the U.S. Variations in smoking behavior and lung cancer mortality are evident by sex and region.Applying geospatial methods to lung cancer mortality data from the National Vital Statistics System and county-level estimates of smoking prevalences from the NCI's Small Area Estimates of Cancer-Related Measures, we evaluated patterns in lung cancer mortality rates (2005--2018) in relation to patterns in ever cigarette smoking prevalences (1997--2003).Overall, ever smoking spatial patterns were generally associated with lung cancer mortality rates, which were elevated in the Appalachian region and lower in the West for both sexes. However, we also observed geographic variation in mortality rates that is not explained by smoking. Using Lee's L statistic for assessing bivariate spatial association, we identified counties where the ever smoking prevalence was low and lung cancer rates were high. We observed a significant cluster of counties (n = 25; P values ranging from 0.001 to 0.04) with low ever smoking prevalence and high mortality rates among females around the Mississippi River region south of St. Louis, Missouri and a similar and smaller cluster among males in Western Mississippi (n = 12; P values ranging from 0.002 to 0.03) that has not been previously described.Our analyses identified U.S. counties where factors other than smoking may be driving lung cancer mortality.These novel findings highlight areas where investigation of environmental and other risk factors for lung cancer is needed.},
+  file = {/Users/kylel/Zotero/storage/CA3GI2T3/Shreves et al. - 2023 - Geographic Patterns in U.S. Lung Cancer Mortality .pdf;/Users/kylel/Zotero/storage/U32GQT3M/Geographic-Patterns-in-U-S-Lung-Cancer-Mortality.html}
+}
+
+@article{simpsonPenalisingModelComponent2017,
+  title = {Penalising {{Model Component Complexity}}: {{A Principled}}, {{Practical Approach}} to {{Constructing Priors}}},
+  shorttitle = {Penalising {{Model Component Complexity}}},
+  author = {Simpson, Daniel and Rue, H{\aa}vard and Riebler, Andrea and Martins, Thiago G. and S{\o}rbye, Sigrunn H.},
+  year = {2017},
+  journal = {Statistical Science},
+  volume = {32},
+  number = {1},
+  eprint = {26408114},
+  eprinttype = {jstor},
+  pages = {1--28},
+  publisher = {Institute of Mathematical Statistics},
+  issn = {0883-4237},
+  urldate = {2024-02-24},
+  abstract = {In this paper, we introduce a new concept for constructing prior distributions. We exploit the natural nested structure inherent to many model components, which defines the model component to be a flexible extension of a base model. Proper priors are defined to penalise the complexity induced by deviating from the simpler base model and are formulated after the input of a user-defined scaling parameter for that model component, both in the univariate and the multivariate case. These priors are invariant to reparameterisations, have a natural connection to Jeffreys' priors, are designed to support Occam's razor and seem to have excellent robustness properties, all which are highly desirable and allow us to use this approach to define default prior distributions. Through examples and theoretical results, we demonstrate the appropriateness of this approach and how it can be applied in various situations.},
+  file = {/Users/kylel/Zotero/storage/TKQ5PRS8/Simpson et al. - 2017 - Penalising Model Component Complexity A Principle.pdf}
+}
+
+@article{spiegelhalterBayesianMeasuresModel2002,
+  title = {Bayesian Measures of Model Complexity and Fit},
+  author = {Spiegelhalter, David J. and Best, Nicola G. and Carlin, Bradley P. and Van Der Linde, Angelika},
+  year = {2002},
+  journal = {Journal of the Royal Statistical Society: Series B (Statistical Methodology)},
+  volume = {64},
+  number = {4},
+  pages = {583--639},
+  issn = {1467-9868},
+  doi = {10.1111/1467-9868.00353},
+  urldate = {2024-02-15},
+  abstract = {Summary. We consider the problem of comparing complex hierarchical models in which the number of parameters is not clearly defined. Using an information theoretic argument we derive a measure pD for the effective number of parameters in a model as the difference between the posterior mean of the deviance and the deviance at the posterior means of the parameters of interest. In general pD approximately corresponds to the trace of the product of Fisher's information and the posterior covariance, which in normal models is the trace of the `hat' matrix projecting observations onto fitted values. Its properties in exponential families are explored. The posterior mean deviance is suggested as a Bayesian measure of fit or adequacy, and the contributions of individual observations to the fit and complexity can give rise to a diagnostic plot of deviance residuals against leverages. Adding pD to the posterior mean deviance gives a deviance information criterion for comparing models, which is related to other information criteria and has an approximate decision theoretic justification. The procedure is illustrated in some examples, and comparisons are drawn with alternative Bayesian and classical proposals. Throughout it is emphasized that the quantities required are trivial to compute in a Markov chain Monte Carlo analysis.},
+  langid = {english},
+  keywords = {Bayesian model comparison,Decision theory,Deviance information criterion,Effective number of parameters,Hierarchical models,Information theory,Leverage,Markov chain Monte Carlo methods,Model dimension},
+  file = {/Users/kylel/Zotero/storage/ZTZBJBTQ/Spiegelhalter et al. - 2002 - Bayesian measures of model complexity and fit.pdf;/Users/kylel/Zotero/storage/4W5EX7Q7/1467-9868.html}
+}
+
+@article{sunOracleAdaptiveCompound2007,
+  title = {Oracle and {{Adaptive Compound Decision Rules}} for {{False Discovery Rate Control}}},
+  author = {Sun, Wenguang and Cai, T. Tony},
+  year = {2007},
+  month = sep,
+  journal = {Journal of the American Statistical Association},
+  volume = {102},
+  number = {479},
+  pages = {901--912},
+  publisher = {Taylor \& Francis},
+  issn = {0162-1459},
+  doi = {10.1198/016214507000000545},
+  urldate = {2023-10-29},
+  abstract = {We develop a compound decision theory framework for multiple-testing problems and derive an oracle rule based on the z values that minimizes the false nondiscovery rate (FNR) subject to a constraint on the false discovery rate (FDR). We show that many commonly used multiple-testing procedures, which are p value--based, are inefficient, and propose an adaptive procedure based on the z values. The z value--based adaptive procedure asymptotically attains the performance of the z value oracle procedure and is more efficient than the conventional p value--based methods. We investigate the numerical performance of the adaptive procedure using both simulated and real data. In particular, we demonstrate our method in an analysis of the microarray data from a human immunodeficiency virus study that involves testing a large number of hypotheses simultaneously.},
+  keywords = {Adaptive procedure,Compound decision rule,False discovery rate,Local false discovery rate,Monotone likelihood ratio,Weighted classification},
+  file = {/Users/kylel/Zotero/storage/GPBKSMD9/Sun and Cai - 2007 - Oracle and Adaptive Compound Decision Rules for Fa.pdf}
+}
+
+@article{watanabeAsymptoticEquivalenceBayes2010,
+  title = {Asymptotic {{Equivalence}} of {{Bayes Cross Validation}} and {{Widely Applicable Information Criterion}} in {{Singular Learning Theory}}},
+  author = {Watanabe, Sumio},
+  year = {2010},
+  journal = {Journal of Machine Learning Research},
+  volume = {11},
+  number = {116},
+  pages = {3571--3594},
+  issn = {1533-7928},
+  urldate = {2024-02-15},
+  abstract = {In regular statistical models, the leave-one-out cross-validation is asymptotically equivalent to the Akaike information criterion. However, since many learning machines are singular statistical models, the asymptotic behavior of the cross-validation remains unknown. In previous studies, we established the singular learning theory and proposed a widely applicable information criterion, the expectation value of which is asymptotically equal to the average Bayes generalization loss. In the present paper, we theoretically compare the Bayes cross-validation loss and the widely applicable information criterion and prove two theorems. First, the Bayes cross-validation loss is asymptotically equivalent to the widely applicable information criterion as a random variable. Therefore, model selection and hyperparameter optimization using these two values are asymptotically equivalent. Second, the sum of the Bayes generalization error and the Bayes cross-validation error is asymptotically equal to 2{$\lambda$}/n, where {$\lambda$} is the real log canonical threshold and n is the number of training samples. Therefore the relation between the cross-validation error and the generalization error is determined by the algebraic geometrical structure of a learning machine. We also clarify that the deviance information criteria are different from the Bayes cross-validation and the widely applicable information criterion.},
+  file = {/Users/kylel/Zotero/storage/7LUMQDHD/Watanabe - 2010 - Asymptotic Equivalence of Bayes Cross Validation a.pdf}
+}
+
+@misc{wenUnifiedViewFalse2018,
+  title = {A {{Unified View}} of {{False Discovery Rate Control}}: {{Reconciliation}} of {{Bayesian}} and {{Frequentist Approaches}}},
+  shorttitle = {A {{Unified View}} of {{False Discovery Rate Control}}},
+  author = {Wen, Xiaoquan},
+  year = {2018},
+  month = mar,
+  number = {arXiv:1803.05284},
+  eprint = {1803.05284},
+  primaryclass = {stat},
+  publisher = {arXiv},
+  doi = {10.48550/arXiv.1803.05284},
+  urldate = {2023-10-29},
+  abstract = {This paper explores the intrinsic connections between the Bayesian false discovery rate (FDR) control procedures and their counterpart of frequentist procedures. We attempt to offer a unified view of FDR control within and beyond the setting of testing exchangeable hypotheses. Under the standard two-groups model and the Oracle condition, we show that the Bayesian and the frequentist methods can achieve asymptotically equivalent FDR control at arbitrary levels. Built on this result, we further illustrate that rigorous post-fitting model diagnosis is necessary and effective to ensure robust FDR controls for parametric Bayesian approaches. Additionally, we show that the Bayesian FDR control approaches are coherent and naturally extended to the setting beyond testing exchangeable hypotheses. Particularly, we illustrate that \$p\$-values are no longer the natural statistical instruments for optimal frequentist FDR control in testing non-exchangeable hypotheses. Finally, we illustrate that simple numerical recipes motivated by our theoretical results can be effective in examining some key model assumptions commonly assumed in both Bayesian and frequentist procedures (e.g., zero assumption).},
+  archiveprefix = {arxiv},
+  keywords = {Statistics - Methodology},
+  file = {/Users/kylel/Zotero/storage/W3FDHU4T/Wen - 2018 - A Unified View of False Discovery Rate Control Re.pdf;/Users/kylel/Zotero/storage/3V4LSH4R/1803.html}
+}
+
+@article{williamh.wombleDifferentialSystematics1951,
+  title = {Differential Systematics},
+  author = {{William H. Womble}},
+  year = {1951},
+  journal = {Science (New York, N.Y.)},
+  volume = {114},
+  number = {2961},
+  eprint = {https://www.science.org/doi/pdf/10.1126/science.114.2961.315},
+  pages = {315--322},
+  doi = {10.1126/science.114.2961.315}
+}
+
+@misc{zhangExactBayesianGeostatistics2023,
+  title = {Exact {{Bayesian Geostatistics Using Predictive Stacking}}},
+  author = {Zhang, Lu and Tang, Wenpin and Banerjee, Sudipto},
+  year = {2023},
+  month = apr,
+  number = {arXiv:2304.12414},
+  eprint = {2304.12414},
+  primaryclass = {math, stat},
+  publisher = {arXiv},
+  doi = {10.48550/arXiv.2304.12414},
+  urldate = {2024-02-03},
+  abstract = {We develop Bayesian predictive stacking for geostatistical models. Our approach builds an augmented Bayesian linear regression framework that subsumes the realizations of the spatial random field and delivers exact analytically tractable posterior inference conditional upon certain spatial process parameters. We subsequently combine such inference by stacking these individual models across the range of values of the hyper-parameters. We devise stacking of means and posterior densities in a manner that is computationally efficient without the need of iterative algorithms such as Markov chain Monte Carlo (MCMC) and can exploit the benefits of parallel computations. We offer novel theoretical insights into the resulting inference within an infill asymptotic paradigm and through empirical results showing that stacked inference is comparable to full sampling-based Bayesian inference at a significantly lower computational cost.},
+  archiveprefix = {arxiv},
+  keywords = {Mathematics - Statistics Theory,Statistics - Computation,Statistics - Methodology},
+  file = {/Users/kylel/Zotero/storage/5KKNVKEW/Zhang et al. - 2023 - Exact Bayesian Geostatistics Using Predictive Stac.pdf;/Users/kylel/Zotero/storage/TQE4IF2T/2304.html}
+}
+
+@book{rao2023,
+    author = {J. Sunil Rao},
+    title = {Statistical Methods in Health Disparity Research},
+    publisher = {Chapman \& Hall/CRC},
+    address={Boca Raton, FL},
+    year = {2023}
+}
+
+@book{waller2004applied,
+title={Applied spatial statistics for public health data},
+author={Waller, Lance A and Gotway, Carol A},
+volume={368},
+year={2004},
+publisher={John Wiley \& Sons}
+}
+
+@incollection{waller2010handbook,
+	title={Disease Mapping},
+	author={Waller, L. and Carlin, B.},
+	booktitle={Handbook Of Spatial Statistics},
+	editor={Gelfand, Alan E and Diggle, Peter and Guttorp, Peter and Fuentes, Montserrat},
+	pages={217–243},
+	year={2010},
+	publisher={CRC Press},
+	address={Boca Raton, FL}
+}
+
+@article{fitzpatrick2010,
+author = {Fitzpatrick, Matthew C. and Preisser, Evan L. and Porter, Adam and Elkinton, Joseph and Waller, Lance A. and Carlin, Bradley P. and Ellison, Aaron M.},
+title = {Ecological boundary detection using Bayesian areal wombling},
+journal = {Ecology},
+volume = {91},
+number = {12},
+pages = {3448-3455},
+keywords = {Adelges tsugae, boundary analysis, ecotones, edge detection, hemlock woolly adelgid, invasive species, spatial statistics},
+doi = {https://doi.org/10.1890/10-0807.1},
+url = {https://esajournals.onlinelibrary.wiley.com/doi/abs/10.1890/10-0807.1},
+eprint = {https://esajournals.onlinelibrary.wiley.com/doi/pdf/10.1890/10-0807.1},
+abstract = {The study of ecological boundaries and their dynamics is of fundamental importance to much of ecology, biogeography, and evolution. Over the past two decades, boundary analysis (of which wombling is a subfield) has received considerable research attention, resulting in multiple approaches for the quantification of ecological boundaries. Nonetheless, few methods have been developed that can simultaneously (1) analyze spatially homogenized data sets (i.e., areal data in the form of polygons rather than point-reference data); (2) account for spatial structure in these data and uncertainty associated with them; and (3) objectively assign probabilities to boundaries once detected. Here we describe the application of a Bayesian hierarchical framework for boundary detection developed in public health, which addresses these issues but which has seen limited application in ecology. As examples, we analyze simulated spread data and the historic pattern of spread of an invasive species, the hemlock woolly adelgid (Adelges tsugae), using county-level summaries of the year of first reported infestation and several covariates potentially important to influencing the observed spread dynamics. Bayesian areal wombling is a promising approach for analyzing ecological boundaries and dynamics related to changes in the distributions of native and invasive species.},
+year = {2010}
+}
+
+@article{banerjee2012bayesian,
+	title={Bayesian Areal Wombling Using False Discovery Rates},
+	author={Li, Pei and Banerjee, Sudipto and Carlin, Bradley P and McBean, Alexander M},
+	journal={Statistics and its Interface},
+	volume={5},
+	number={2},
+	pages={149--158},
+	year={2012},
+	publisher={International Press of Boston}
+}
+
+@incollection{hanson2015spatial,
+	title={Spatial Boundary Detection for Areal Counts},
+	author={Hanson, Timothy and Banerjee, Sudipto and Li, Pei and McBean, Alexander},
+	booktitle={Nonparametric Bayesian Inference in Biostatistics},
+	pages={377--399},
+	year={2015},
+	publisher={Springer}
+}
+
+@book{lawson2013statistical,
+title={Statistical methods in spatial epidemiology.},
+author={Lawson, Andrew B},
+year={2013},
+publisher={John Wiley \& Sons}
+}
+
+@book{lawson2016handbook,
+	title={Handbook of Spatial Epidemiology},
+	author={Lawson, Andrew, B. and Banerjee, Sudipto and Haining, Robert and Ugarte, Maria, D.},
+	year={2016},
+	publisher={CRC press, Boca Raton, FL}
+}
+
+@article{womble1951differential,
+	title={Differential Systematics},
+	author={Womble, William H},
+	journal={Science},
+	volume={114},
+	number={2961},
+	pages={315--322},
+	year={1951},
+	publisher={JSTOR}
+	}
+
+ @article{jacquez2003local,
+	title={Local Clustering in Breast, Lung and Colorectal Cancer in Long Island, New York},
+	author={Jacquez, Geoffrey M and Greiling, Dunrie A},
+	journal={International Journal of Health Geographics},
+	volume={2},
+	number={1},
+	pages={1--12},
+	year={2003},
+	publisher={BioMed Central}
+}
+
+@article{jacquez2003geographic,
+	title={Geographic Boundaries in Breast, Lung and Colorectal Cancers in Relation to Exposure to Air Toxics in Long Island, New York},
+	author={Jacquez, Geoffrey M and Greiling, Dunrie A},
+	journal={International Journal of Health Geographics},
+	volume={2},
+	number={1},
+	pages={1--22},
+	year={2003},
+	publisher={BioMed Central}
+}
+
+@article{lu2005bayesian,
+	title={Bayesian Areal Wombling for Geographical Boundary Analysis},
+	author={Lu, Haolan and Carlin, Bradley P},
+	journal={Geographical Analysis},
+	volume={37},
+	number={3},
+	pages={265--285},
+	year={2005},
+	publisher={Wiley Online Library}
+}
+
+@article{lee2012boundary,
+  title={Boundary detection in disease mapping studies},
+  author={Lee, Duncan and Mitchell, Richard},
+  journal={Biostatistics},
+  volume={13},
+  number={3},
+  pages={415--426},
+  year={2012},
+  publisher={Oxford University Press}
+}
+
+@article{li2011mining,
+  title={Mining boundary effects in areally referenced spatial data using the Bayesian information criterion},
+  author={Li, Pei and Banerjee, Sudipto and McBean, Alexander M},
+  journal={Geoinformatica},
+  volume={15},
+  number={3},
+  pages={435--454},
+  year={2011},
+  publisher={Springer}
+}
+
+
+@article{ma2007bayesian,
+  title={Bayesian Multivariate Areal Wombling for Multiple Disease Boundary Analysis},
+  author={Ma, Haijun and Carlin, Bradley P},
+  journal={Bayesian Analysis},
+  volume={2},
+  number={2},
+  pages={281--302},
+  year={2007}
+}
+
+@article{ma2010hierarchical,
+  title={Hierarchical and joint site-edge methods for Medicare hospice service region boundary analysis},
+  author={Ma, Haijun and Carlin, Bradley P and Banerjee, Sudipto},
+  journal={Biometrics},
+  volume={66},
+  number={2},
+  pages={355--364},
+  year={2010},
+  publisher={Wiley Online Library}
+}
+
+@ARTICLE{corpas-burgos2021mathematics,
+title = {An Autoregressive Disease Mapping Model for Spatio-Temporal Forecasting},
+author = {Corpas-Burgos, Francisca and Martinez-Beneito, Miguel A.},
+year = {2021},
+journal = {Mathematics},
+volume = {9},
+number = {4},
+pages = {1-17},
+abstract = {One of the more evident uses of spatio-temporal disease mapping is forecasting the spatial distribution of diseases for the next few years following the end of the period of study. Spatio-temporal models rely on very different modeling tools (polynomial fit, splines, time series, etc.), which could show very different forecasting properties. In this paper, we introduce an enhancement of a previous autoregressive spatio-temporal model with particularly interesting forecasting properties, given its reliance on time series modeling. We include a common spatial component in that model and show how that component improves the previous model in several ways, its predictive capabilities being one of them. In this paper, we introduce and explore the theoretical properties of this model and compare them with those of the original autoregressive model. Moreover, we illustrate the benefits of this new model with the aid of a comprehensive study on 46 different mortality data sets in the Valencian Region (Spain) where the benefits of the new proposed model become evident.},
+keywords = {bayesian statistics; spatial statistics; spatio-temporal statistics; disease mapping; forecasting; mortality studies},
+url = {https://EconPapers.repec.org/RePEc:gam:jmathe:v:9:y:2021:i:4:p:384-:d:499484}
+}
+
+@article{corpas-burgos2020serra,
+title = {On the use of adaptive spatial weight matrices from disease mapping multivariate analyses},
+author = {Corpas-Burgos, Francisca and Martinez-Beneito, Miguel A.},
+year = {2020},
+journal = {Stochastic Environmental Research and Risk Assessment},
+volume = {34},
+number = {},
+pages = {531–544}
+}
+
+@article{li2015bayesian,
+  title={Bayesian models for detecting difference boundaries in areal data},
+  author={Li, Pei and Banerjee, Sudipto and Hanson, Timothy A and McBean, Alexander M},
+  journal={Statistica Sinica},
+  volume={25},
+  number={1},
+  pages={385},
+  year={2015},
+  publisher={NIH Public Access}
+}
+
+@article{lu2007bayesian,
+  title={Bayesian areal wombling via adjacency modeling},
+  author={Lu, Haolan and Reilly, Cavan S and Banerjee, Sudipto and Carlin, Bradley P},
+  journal={Environmental and ecological statistics},
+  volume={14},
+  pages={433--452},
+  year={2007},
+  publisher={Springer}
+}
+
+@misc{aiello2023detecting,
+      title={Detecting Spatial Health Disparities Using Disease Maps}, 
+      author={Luca Aiello and Sudipto Banerjee},
+      year={2023},
+      eprint={2309.02086},
+      archivePrefix={arXiv},
+      primaryClass={stat.ME},
+      url={https://arxiv.org/abs/2309.02086}
+}

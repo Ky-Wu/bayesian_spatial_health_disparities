@@ -1,6 +1,5 @@
 ---
 title: "Simulation Example: Exact Conjugate Model"
-author: "Kyle Lin Wu"
 bibliography: "../../bibtex/bayesian_spatial_disparities.bib"
 output: 
   pdf_document:

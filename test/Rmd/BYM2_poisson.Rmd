@@ -1,6 +1,5 @@
 ---
 title: "Simulation Example: Simulated Count Outcome"
-author: "Kyle Lin Wu"
 bibliography: "../../bibtex/bayesian_spatial_disparities.bib"
 output: 
   pdf_document:
@@ -82,6 +81,7 @@ adj_df <- data.frame(
 adj_df <- adj_df[adj_df$i < adj_df$j, ]
 rownames(adj_df) <- NULL
 
+# data generation settings
 beta <- c(-5, 0.5)
 cent_coords <- st_coordinates(county_cent)
 mean_lat <- mean(cent_coords[,2])
@@ -156,8 +156,6 @@ summary(rho_samps)
 ```
 
 We use the collected samples to compute difference probabilities of the form $\tau_{k}(\epsilon) = \Pr \left(\left.\frac{|c_k^{T}\phi|}{\sqrt{\mbox{Var}(c_k^{T} \phi \,|\, y)}} > \epsilon \;\right|\; y \right).$ 
-
-Rejection path graph:
 
 ```{r}
 V_est <- cov(phi_samps)
@@ -270,6 +268,11 @@ rejection_path[, order_type := fcase(
   order_type == "e4_vij_order", paste0("eps = ", e4),
   order_type == "e5_vij_order", paste0("eps = ", e5)
 )]
+```
+
+Rejection path graph:
+
+```{r}
 sim_vij_order_graph <- ggplot() +
   geom_point(data = rejection_path,
              aes(x = optim_e_vij, y = order, color = true_diff,
@@ -435,15 +438,6 @@ stability_plot2 <- ggplot(data = tau_df[diff_prob == "Standardized",]) +
        y = "Ranks of tau_ij(e_CE * 3)") +
   theme_bw() +
   theme(legend.position = "bottom")
-
-roc_plot <- pROC::ggroc(roc_list, aes = c("colour", "linetype"), linewidth = 0.8) +
-  geom_abline(intercept = 1, slope = 1, color = "darkgrey", linetype = "dotted") +
-  scale_color_discrete(name = "Model") +
-  scale_linetype_discrete(name = "Model") +
-  theme_bw() +
-  theme(legend.position = "bottom") +
-  labs(x = "Specificity", y = "Sensitivity")
-roc_plot
 
 roc_plot_s <- pROC::ggroc(roc_list[1], linewidth = 0.8) +
   geom_abline(intercept = 1, slope = 1, color = "darkgrey", linetype = "dotted") +

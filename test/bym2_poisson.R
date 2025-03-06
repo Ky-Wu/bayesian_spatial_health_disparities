@@ -89,7 +89,6 @@ b0_sigma <- 0.1
 data <- list(
   N = N,
   Sigma_chol = t(Sigma_analysis_chol),
-  #Sigma_scaled = Sigma_scaled,
   mu_phi = rep(0, N),
   Y = Y,
   E = E,
@@ -98,6 +97,7 @@ data <- list(
   a0_sigma = a0_sigma,
   b0_sigma = b0_sigma
 )
+plot(county_sf)
 
 fit1 <- stan(
   file = file.path(getwd(), "src", "stan", "bym2_poisson.stan"),
@@ -112,10 +112,15 @@ fit1 <- stan(
 print(fit1)
 
 samps <- as.matrix(fit1)
-HDInterval::hdi(samps[,"rho"])
+#HDInterval::hdi(samps[,"rho"])
 phi_samps <- samps[, paste0("phi[", seq_len(N), "]")]
-V_est <- cov(phi_samps)
+sigma2_samps <- samps[, "sigma2"]
+summary(sigma2_samps)
+rho_samps <- samps[, "rho"]
+summary(rho_samps)
 
+HDInterval::hdi(rho_samps)
+V_est <- cov(phi_samps)
 n_s <- nrow(phi_samps)
 k <- nrow(adj_df)
 phi_diffs <- vapply(seq_len(k), function(pair_indx) {
@@ -152,21 +157,6 @@ mean(true_diff)
 
 optim_e_vij <- ComputeSimVij(phi_diffs, epsilon = optim_e)
 optim_e_vij_order <- order(optim_e_vij, decreasing = F)
-t_seq_length <- 10000
-t_seq <- seq(0, max(optim_e_vij) - .001, length.out = t_seq_length)
-t_FDR <- vapply(t_seq, function(t) FDR_estimate(optim_e_vij, t, e = 0), numeric(1))
-t_FNR <- vapply(t_seq, function(t) FNR_estimate(optim_e_vij, t, e = 0), numeric(1))
-
-
-eta <- .25
-optim_t <- min(c(t_seq[t_FDR <= eta], 1))
-optim_t <- quantile(optim_e_vij, 0.75)
-decisions <- logical(nrow(adj_df))
-decisions[optim_e_vij >= optim_t] <- TRUE
-print(paste0("Optimal epsilon: ", optim_e))
-print(paste0("Optimal t: ", optim_t))
-print(ComputeClassificationMetrics(decisions, true_diff))
-mean(decisions)
 
 # indx <- abs(phi_truediff)  > median(abs(phi_truediff))
 indx <- optim_e_vij >= sort(optim_e_vij, decreasing = TRUE)[40]
@@ -230,7 +220,6 @@ rejection_path <- data.table(
   true_diff = true_diff[optim_e_vij_order]
 )
 
-compare_indx <- 110:139
 rejection_path <- melt(rejection_path,
                        id.vars = c("optim_e_vij", "true_diff"),
                        variable.name = "order_type",
@@ -260,48 +249,7 @@ sim_vij_order_graph <- ggplot() +
   theme(legend.position = "bottom")
 sim_vij_order_graph
 
-ggplot() +
-  geom_point(data = data.frame(e5 = e5_vij_order,
-                               e2 = e2_vij_order),
-             aes(x = e2, y = e5, color = true_diff[optim_e_vij_order],
-                 shape = true_diff[optim_e_vij_order]),
-             alpha = 1, size = 1) +
-  theme_bw() +
-  scale_color_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
-                     labels = c("No difference", "True difference"),
-                     values = c("FALSE" = "red", "TRUE" = "dodgerblue")) +
-  scale_shape_manual(name = paste0("eps = ", round(optim_e, digits = 3)),
-                     labels = c("No difference", "True difference"),
-                     values = c("FALSE" = 2, "TRUE" = 7)) +
-  theme(legend.position = "bottom")
-
-n_compare <- 100
-indx <- seq(k, k - n_compare + 1)
-cor(indx, e5_vij_order[indx])
-cor(seq(1, k), e5_vij_order)
-
-optim_e_vij_cutoff <- sort(optim_e_vij)[110]
-compare_indx <- optim_e_vij >= optim_e_vij_cutoff
-DescTools::KendallW(cbind(rank(e2_vij[compare_indx]),
-                          rank(e5_vij[compare_indx])),
-                          test = TRUE, correct = TRUE)
-cor(rank(e5_vij[compare_indx]), rank(e2_vij[compare_indx]))
-plot(e2_vij ~ e5_vij)
-roc_list <- list(
-  pROC::roc(as.vector(true_diff), as.vector(optim_e_vij))
-)
-print(roc_list)
-auc <- lapply(roc_list, function(r) round(pROC::auc(r), 3))
-
-roc_plot <- pROC::ggroc(roc_list, aes = c("colour", "linetype"), linewidth = 0.8) +
-  geom_abline(intercept = 1, slope = 1, color = "darkgrey", linetype = "dotted") +
-  scale_color_discrete(name = "Model") +
-  scale_linetype_discrete(name = "Model") +
-  theme_bw() +
-  theme(legend.position = "bottom") +
-  labs(x = "Specificity", y = "Sensitivity")
-print(roc_plot)
-
+# compute unstandardized difference probabilities
 phi_diffs2 <- vapply(seq_len(k), function(pair_indx) {
   i <- adj_df[pair_indx,]$i
   j <- adj_df[pair_indx,]$j
@@ -371,21 +319,21 @@ sim_vij2_order_graph <- ggplot() +
                      labels = c("No difference", "True difference"),
                      values = c("FALSE" = 2, "TRUE" = 7)) +
   theme(legend.position = "bottom")
+sim_vij2_order_graph
+
 # examine top 40 rankings
 indx1 <- optim_e_vij >= sort(optim_e_vij)[100]
 sum(indx1)
 rank_stability_score <- cor(rank(e2_vij[indx1]), rank(e5_vij[indx1]))
-plot(rank(e2_vij[indx1]) ~ rank(e5_vij[indx1]))
-Wt <- DescTools::KendallW(cbind(rank(e2_vij[indx1]), rank(e5_vij[indx1])), correct = TRUE, test = TRUE)
-sim_vij_order_graph
 indx2 <- optim_e_vij2 >= sort(optim_e_vij2)[100]
-sum(indx2)
 rank_stability_score2 <- cor(rank(e2_vij2[indx2]), rank(e5_vij2[indx2]))
 Wt2 <- DescTools::KendallW(cbind(rank(e2_vij2[indx2]), rank(e5_vij2[indx2])),
-                    correct = TRUE, test = TRUE)
-plot(rank(e2_vij2) ~ rank(e5_vij2))
-plot(rank(e2_vij2[indx2]) ~ rank(e5_vij2[indx2]))
-sim_vij2_order_graph
+                           correct = TRUE, test = TRUE)
+rank_stability_df <- data.table(
+  "Difference Type" = c("Standardized Difference", "Unstandardized Difference"),
+  "Rank Stability Score" = c(rank_stability_score, rank_stability_score2)
+)
+rank_stability_df
 
 roc_list <- list(
   "Standardized Difference" = pROC::roc(as.vector(true_diff), as.vector(optim_e_vij)),
@@ -397,7 +345,7 @@ auc_values
 tau_df <- data.table(
   diff_prob = rep(c("Standardized", "Unstandardized"), each = nrow(adj_df)),
   e1 = rep(c(round(optim_e / 3, digits = 3),
-            round(e / 3, digits = 3)), each = nrow(adj_df)),
+             round(e / 3, digits = 3)), each = nrow(adj_df)),
   e2 = rep(c(round(optim_e * 3, digits = 3),
              round(e * 3, digits = 3))),
   tau1_rank = c(rank(e2_vij), rank(e2_vij2)),

@@ -9,7 +9,6 @@ rstudio/
 data/IHME_county_cancer_mortality.XLSX
 data/US_data/
 presentation/
-bibtex/
 src/VB/
 *.docx
 test/BYM2_stan_simulation.R

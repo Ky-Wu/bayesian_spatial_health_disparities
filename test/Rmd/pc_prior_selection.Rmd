@@ -1,7 +1,6 @@
 ---
 title: "Selection of Lambda in Rho Prior"
-author: "Kyle Lin Wu"
-bibliography: "../../bibtex/epsilon_spatial_differences.bib"
+bibliography: "../../bibtex/bayesian_spatial_disparities.bib"
 output: 
   pdf_document:
     number_sections: true

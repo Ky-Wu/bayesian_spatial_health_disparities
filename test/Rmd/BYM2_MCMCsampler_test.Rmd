@@ -1,6 +1,5 @@
 ---
 title: "Simulation Example: Placing Prior on Rho"
-author: "Kyle Lin Wu"
 bibliography: "../../bibtex/bayesian_spatial_disparities.bib"
 output: 
   pdf_document:
@@ -97,7 +96,7 @@ system.time({
 beta_sim <- samps$beta
 gamma_sim <- samps$gamma
 sigma2_sim <- samps$sigma2
-rho_sim <- samps$rho+
+rho_sim <- samps$rho
 YFit_sim <- samps$YFit
 ```
 
