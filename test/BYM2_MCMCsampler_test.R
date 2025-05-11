@@ -157,7 +157,6 @@ e2_vij <- ComputeSimVij(phi_diffs, epsilon = e2)
 e3_vij <- ComputeSimVij(phi_diffs, epsilon = e3)
 e4_vij <- ComputeSimVij(phi_diffs, epsilon = e4)
 e5_vij <- ComputeSimVij(phi_diffs, epsilon = e5)
-e6_vij <- ComputeSimVij(phi_diffs, epsilon = e5 * 5)
 
 
 optim_e_vij_order <- order(optim_e_vij, decreasing = F)
@@ -165,31 +164,6 @@ e2_vij_order <- order(e2_vij[optim_e_vij_order], decreasing = F)
 e3_vij_order <- order(e3_vij[optim_e_vij_order], decreasing = F)
 e4_vij_order <- order(e4_vij[optim_e_vij_order], decreasing = F)
 e5_vij_order <- order(e5_vij[optim_e_vij_order], decreasing = F)
-
-
-e6_vij_order <- order(e6_vij[order(e2_vij)], decreasing = TRUE)
-n_compare <- 1000
-n_start <- 200
-compare_seq <- seq(n_start, n_start + n_compare - 1)
-plot(e6_vij_order[compare_seq] ~ rev(compare_seq))
-DescTools::KendallW(cbind(e6_vij_order[compare_seq],
-                          rev(compare_seq)), test = TRUE)
-
-
-e2_rank <- rank(e2_vij2)
-e6_rank2 <- rank(e6_vij2)
-compare_indx <- e6_rank > 8000 & e6_rank < 9000
-plot(e6_rank[compare_indx] ~ e6_rank2[compare_indx])
-DescTools::KendallW(cbind(e2_rank[compare_indx],
-                         e6_rank2[compare_indx]),
-                   test = TRUE, correct = TRUE)
-e6_vij2_order <- order(e6_vij2[order(e2_vij2)], decreasing = TRUE)
-n_compare <- 200
-n_start <- 100
-compare_seq <- seq(n_start, n_start + n_compare - 1)
-plot(e6_vij2_order[compare_seq] ~ rev(compare_seq))
-DescTools::KendallW(cbind(e6_vij2_order[compare_seq],
-                          rev(compare_seq)), test = TRUE)
 
 rejection_path <- data.table(
   optim_e_vij = seq_along(optim_e_vij),
@@ -199,11 +173,11 @@ rejection_path <- data.table(
   e5_vij_order = e5_vij_order,
   true_diff = true_diff[optim_e_vij_order]
 )
-indx <- 9020:9119
+indx <- seq(8820, 9119)
 print(paste0("Correlation between top 100 rankings for eps = ", optim_e, " and eps = ", e5, ": ",
              rejection_path[indx, cor(optim_e_vij, e5_vij_order)]))
 
-rejection_path <- melt(rejection_path,
+rejection_path <- melt(rejection_path[indx,],
                        id.vars = c("optim_e_vij", "true_diff"),
                        variable.name = "order_type",
                        value.name = "order")
@@ -320,8 +294,7 @@ ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "auc_FDR_vijorder.png
        width = 12, height = 6, units = "in", auc_FDR_vijorder)
 
 
-# look at top 100 rankings
-indx <- 9020:9119
+# look at top 300 rankings
 rejection_path <- data.table(
   optim_e_vij = seq_along(optim_e_vij),
   e2_vij_order = e2_vij_order,
@@ -330,6 +303,7 @@ rejection_path <- data.table(
   e5_vij_order = e5_vij_order,
   true_diff = true_diff[optim_e_vij_order]
 )
+indx <- seq(8820, 9119)
 rejection_path <- melt(rejection_path[indx,],
                        id.vars = c("optim_e_vij", "true_diff"),
                        variable.name = "order_type",
@@ -342,7 +316,7 @@ rejection_path[, order_type := fcase(
 )]
 sim_vij_order_graph <- ggplot() +
   geom_point(data = rejection_path, color = "dodgerblue",
-             aes(x = optim_e_vij, y = order),
+             aes(x = optim_e_vij, y = order, color = true_diff),
              alpha = 1, size = 1) +
   #geom_vline(xintercept = nrow(ij_list) - sum(optim_e_vij == 1)) +
   facet_grid(~order_type) +
@@ -352,7 +326,7 @@ sim_vij_order_graph <- ggplot() +
   theme(legend.position = "bottom")
 sim_vij_order_graph
 
-ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "top100_vij_order_graph.png"),
+ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "top300_vij_order_graph.png"),
        width = 8, height = 5.5, units = "in", sim_vij_order_graph)
 
 # what if we dont divide by conditional posterior variance?
@@ -366,67 +340,58 @@ phi_truediffs <- vapply(seq_len(nrow(ij_list)), function(pair_indx) {
   j <- ij_list[pair_indx,]$j
   phi[i] - phi[j]
 }, numeric(1))
-# look at some differences
-dev.off()
-par(mfrow = c(2,2))
-plot(density(abs(phi_diffs[,5])), xlim = c(0, 6))
-plot(density(abs(phi_diffs[,15])), xlim = c(0, 6))
-plot(density(abs(phi_diffs[,55])), xlim = c(0, 6))
-plot(density(abs(phi_diffs[,130])), xlim = c(0, 6))
+
 loss_function <- function(v, epsilon) -ConditionalEntropy(v)
 system.time({
-  eps_optim <- optim(1, function(e) {
-    e_vij <- ComputeSimVij(phi_diffs, epsilon = e)
+  eps_optim2 <- optim(1, function(e) {
+    e_vij <- ComputeSimVij(phi_diffs2, epsilon = e)
     loss_function(e_vij, epsilon = e)
   }, method = "Brent", lower = 0.0001, upper = 3.0)
 })
-e <- eps_optim$par
+e <- eps_optim2$par
 e_vij2 <- ComputeSimVij(phi_diffs2, epsilon = e)
 e2 <- signif(e / 3, 3)
 e3 <- signif(e / 1.5, 3)
 e4 <- signif(e * 1.5, 3)
 e5 <- signif(e * 3, 3)
+
 e2_vij2 <- ComputeSimVij(phi_diffs2, epsilon = e2)
 e3_vij2 <- ComputeSimVij(phi_diffs2, epsilon = e3)
 e4_vij2 <- ComputeSimVij(phi_diffs2, epsilon = e4)
 e5_vij2 <- ComputeSimVij(phi_diffs2, epsilon = e5)
-e6_vij2 <- ComputeSimVij(phi_diffs2, epsilon = e5 * 2)
 true_diff <- abs(phi_truediffs) > e
 
-e_vij_order <- order(e_vij, decreasing = F)
-e2_vij_order <- order(e2_vij[e_vij_order], decreasing = F)
-e3_vij_order <- order(e3_vij[e_vij_order], decreasing = F)
-e4_vij_order <- order(e4_vij[e_vij_order], decreasing = F)
-e5_vij_order <- order(e5_vij[e_vij_order], decreasing = F)
+e_vij_order2 <- order(e_vij2, decreasing = F)
+e2_vij_order2 <- order(e2_vij2[e_vij_order2], decreasing = F)
+e3_vij_order2 <- order(e3_vij2[e_vij_order2], decreasing = F)
+e4_vij_order2 <- order(e4_vij2[e_vij_order2], decreasing = F)
+e5_vij_order2 <- order(e5_vij2[e_vij_order2], decreasing = F)
+DescTools::KendallW(cbind(seq_along(e_vij2),
+                          e3_vij_order2), test = TRUE)
 
-DescTools::KendallW(cbind(seq_along(e_vij),
-                          e2_vij_order,
-                          e3_vij_order,
-                          e4_vij_order,
-                          e5_vij_order), test = TRUE)
-
-rejection_path <- data.table(
-  e_vij = seq_along(e_vij),
-  e2_vij_order = e2_vij_order,
-  e3_vij_order = e3_vij_order,
-  e4_vij_order = e4_vij_order,
-  e5_vij_order = e5_vij_order,
-  true_diff = true_diff[e_vij_order]
+rejection_path2 <- data.table(
+  e_vij = seq_along(e_vij2),
+  e2_vij_order = e2_vij_order2,
+  e3_vij_order = e3_vij_order2,
+  e4_vij_order = e4_vij_order2,
+  e5_vij_order = e5_vij_order2,
+  true_diff = true_diff[e_vij_order2]
 )
-rejection_path[9020:9119, cor(e_vij, e5_vij_order)]
-rejection_path <- melt(rejection_path[indx,],
-                       id.vars = c("e_vij", "true_diff"),
-                       variable.name = "order_type",
-                       value.name = "order")
-rejection_path[, order_type := fcase(
+print(paste0("Correlation between top 300 rankings for eps = ", e, " and eps = ", e5, ": ",
+             rejection_path2[indx, cor(e_vij, e5_vij_order)]))
+rejection_path2 <- melt(rejection_path2[indx,],
+                        id.vars = c("e_vij", "true_diff"),
+                        variable.name = "order_type",
+                        value.name = "order")
+rejection_path2[, order_type := fcase(
   order_type == "e2_vij_order", paste0("eps = ", e2),
   order_type == "e3_vij_order", paste0("eps = ", e3),
   order_type == "e4_vij_order", paste0("eps = ", e4),
   order_type == "e5_vij_order", paste0("eps = ", e5)
 )]
 sim_vij_order_graph2 <- ggplot() +
-  geom_point(data = rejection_path, color = "dodgerblue",
-             aes(x = e_vij, y = order),
+  geom_point(data = rejection_path2, color = "dodgerblue",
+             aes(x = e_vij, y = order, color = true_diff),
              alpha = 1, size = 1) +
   #geom_vline(xintercept = nrow(ij_list) - sum(optim_e_vij == 1)) +
   facet_grid(~order_type) +
@@ -436,18 +401,8 @@ sim_vij_order_graph2 <- ggplot() +
   theme(legend.position = "bottom")
 sim_vij_order_graph2
 
-e6_vij2_order <- order(e6_vij2[order(e2_vij2)], decreasing = TRUE)
-n_compare <- 100
-n_start <- 200
-compare_seq <- seq(n_start, n_start + n_compare - 1)
-plot(e6_vij2_order[compare_seq] ~ compare_seq)
-DescTools::KendallW(cbind(e6_vij2_order[compare_seq],
-                          compare_seq), test = TRUE)
-DescTools::KendallW(cbind(order(e5_vij, decreasing = TRUE)[1:100],
-                          order(e6_vij, decreasing = TRUE)[1:100]), test = TRUE)
-
 roc_list <- list(
-  pROC::roc(as.vector(true_diff), as.vector(e_vij))
+  pROC::roc(as.vector(true_diff), as.vector(e_vij2))
 )
 names(roc_list) <- c(
   paste0("rho ~ PC(", lambda_rho, ")")
@@ -461,5 +416,5 @@ roc_plot <- pROC::ggroc(roc_list, aes = c("colour", "linetype"), linewidth = 0.8
   theme(legend.position = "bottom") +
   labs(x = "Specificity", y = "Sensitivity")
 
-ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "top100_unstd_vij_order_graph.png"),
-       width = 8, height = 5.5, units = "in", sim_vij_order_graph)
+ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "top300_unstd_vij_order_graph.png"),
+       width = 8, height = 5.5, units = "in", sim_vij_order_graph2)
