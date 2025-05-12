@@ -174,7 +174,7 @@ rejection_path <- data.table(
   true_diff = true_diff[optim_e_vij_order]
 )
 indx <- seq(8820, 9119)
-print(paste0("Correlation between top 100 rankings for eps = ", optim_e, " and eps = ", e5, ": ",
+print(paste0("Correlation between top 300 rankings for eps = ", optim_e, " and eps = ", e5, ": ",
              rejection_path[indx, cor(optim_e_vij, e5_vij_order)]))
 
 rejection_path <- melt(rejection_path[indx,],
