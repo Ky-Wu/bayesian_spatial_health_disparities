@@ -113,7 +113,7 @@ Sigma_chol <- chol(Sigma)
 # sigma2 = overall variance
 beta <- c(2, 5)
 sigma2 <- 5
-rho <- 0.90
+rho <- 0.95
 sigma2Sp <- rho * sigma2
 sigma2NSp <- (1 - rho) * sigma2
 # Generate random effects

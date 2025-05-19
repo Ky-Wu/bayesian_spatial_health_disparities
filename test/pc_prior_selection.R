@@ -69,3 +69,38 @@ chosen_lambda
 samps <- samplePCPrior(100000, Lambda, chosen_lambda)
 quantile(samps, c(0.025, 0.975))
 
+# CA simulation setup
+source(file.path(getwd(), "src", "R", "simulation", "CA_sharp_boundary_sim_setup.R"))
+set.seed(1130)
+Q_eigen <- eigen(Q_scaled)
+Lambda <- Q_eigen$values
+alpha <- 2/3
+U <- 0.5
+l_seq <- seq(0.15, 0.30, by = 0.01)
+# alpha = P(rho <= U)
+alphas <- vapply(l_seq, function(target_l) {
+  mean(samplePCPrior(20000, Lambda, target_l) <= U)
+}, numeric(1))
+# select lambda such that p(rho <= U) ~= alpha
+chosen_lambda <- min(l_seq[alphas >= alpha])
+chosen_lambda
+
+f <- function(xseq) vapply(xseq, function(x) rhoPCPrior(x, Lambda, chosen_lambda), numeric(1))
+res <- integrate(f, lower = 0, upper = 0.5)
+norm <- integrate(f, 0, 1)
+res$value / norm$value
+
+samps <- samplePCPrior(100000, Lambda, chosen_lambda)
+quantile(samps, c(0.025, 0.975))
+mean(samps <= U)
+
+xseq <- seq(0, 1, length.out = 5000)
+dseq <- vapply(xseq, function(x) rhoPCPrior(x, Lambda, chosen_lambda), numeric(1))
+pc_prior <- ggplot() +
+  geom_line(aes(x = xseq, y = dseq / norm$value), color = "dodgerblue") +
+  coord_cartesian(ylim = c(0, 2.0)) +
+  theme_bw() +
+  labs(x = "rho", y = "Density")
+ggsave(file.path(getwd(), "output", "CA_sharp_boundary_sim", "pc_prior.png"),
+       pc_prior,
+       width = 7, height = 5, dpi = 500)

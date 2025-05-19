@@ -10,7 +10,7 @@ library(rstan)
 library(pROC)
 rm(list = ls())
 
-outputdir <- file.path(getwd(), "output", "CA_sharp_boundary_sim")
+outputdir <- file.path(getwd(), "output", "CA_sharp_boundary_sim2")
 # Data generation
 
 # Helper functions to compute posterior probabilities v_ij
@@ -44,6 +44,10 @@ if(file.exists(file.path(outputdir, "all_vij_df.csv"))) {
   all_vij_df <- fread(file.path(outputdir, "all_vij_df.csv"))
   current_i <- max(all_vij_df$sim_i) + 1
 }
+# override setup
+rho <- 0.6
+sigma2Sp <- rho * sigma2
+sigma2NSp <- (1 - rho) * sigma2
 for (sim_i in seq(current_i, n_sim)) {
   print(paste0("Running simulation ", sim_i, "/", n_sim, "..."))
   set.seed(sim_i)
