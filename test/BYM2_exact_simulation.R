@@ -150,9 +150,19 @@ y_map <- ggplot() +
 #   scale_fill_viridis_d(name = "Y quantile", drop = FALSE) +
 #   theme_minimal() +
 #   theme(legend.position = "bottom", legend.title=element_text(size=10))
+cut_pts <- quantile(phi, seq(0, 1, length = 6))
+phi_cut_sf <- cbind(phi_cut = cut(phi, cut_pts, right = FALSE,
+                                  include.lowest = TRUE),
+                        county_sf)
 phi_map <- ggplot() +
   geom_sf(data = county_sf, aes(fill = phi)) +
   scale_fill_viridis_c(name = "Simulated phi") +
+  theme_bw() +
+  coord_sf(crs = st_crs(5070)) +
+  theme(legend.position = "bottom")
+phi_cut_map <- ggplot() +
+  geom_sf(data = phi_cut_sf, aes(fill = phi_cut)) +
+  scale_fill_viridis_d(name = "Simulated Phi") +
   theme_bw() +
   coord_sf(crs = st_crs(5070)) +
   theme(legend.position = "bottom")
@@ -222,6 +232,8 @@ ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_data.png"),
        width = 6, height = 4.5, units = "in", y_map, dpi = 900)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_phi.png"),
        width = 6, height = 4.5, units = "in", phi_map, dpi = 900)
+ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_phi_cut.png"),
+       width = 7, height = 4.5, units = "in", phi_cut_map, dpi = 900)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "US_sim_yfitpmean.png"),
        width = 6, height = 4.5, units = "in", pmeans_map, dpi = 900)
 ggsave(file.path(getwd(), "output", "US_exact_sample_sim", "vij_order.png"),

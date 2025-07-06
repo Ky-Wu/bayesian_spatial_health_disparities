@@ -84,17 +84,19 @@ for (sim_i in seq(current_i, n_sim)) {
                         alpha = 1, ncolumn = ncol(X), H = 15, ns = dni,
                         udnei = udnei, cn = c(0, cni))
     model.inits <- rep(list(list(rho1 = 0.1, tau1 = 1, taue1 = 5,
-                                 taus = 1 / 5, beta = rep(0, ncol(X)))), 2)
+                                 taus = 1 / 5, beta = rep(0, ncol(X)))), 4)
     model.param <- c("beta", "rho1", "tau1", "vare1", "taus", "phi", "u")
     run.DAGAR1 <- jags(model.data1, model.inits, model.param,
                        file.path(outputdir, "DAGAR_ARDP.txt"),
                        n.chains = 2,
-                       n.iter = 10000,
-                       n.burnin = 5000,
+                       n.iter = 60000,
+                       n.burnin = 20000,
                        n.thin = 1)
+    name <- paste0("sim", sim_i, "DAGAR_ARDP_samps.RData")
+    save(run.DAGAR1, file = file.path(outputdir, "ARDP_DAGAR_samps", name))
     gammas <-  run.DAGAR1$BUGSoutput$sims.matrix[,4:61]
-    county_sf$ARDP_gamma_pmeans <- apply(gammas, 2, mean)
-    plot(county_sf)
+    #county_sf$ARDP_gamma_pmeans <- apply(gammas, 2, mean)
+    #plot(county_sf)
     # estimate difference boundaries
     vij_samples <- vapply(seq_len(nrow(ij_list)), function(pair_indx) {
       i <- ij_list[pair_indx,]$i

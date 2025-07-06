@@ -5,15 +5,19 @@ rm(list = ls())
 
 source(file.path(getwd(), "src", "R", "simulation", "CA_sharp_boundary_sim_setup.R"))
 outputdir <- file.path(getwd(), "output", "CA_sharp_boundary_sim")
-all_vij_df <- fread(file.path(outputdir, "all_vij_df.csv"))
+all_vij_df <- data.table()
+for(file_path in dir(file.path(outputdir, "sim_results"))) {
+  temp <- fread(file.path(outputdir, "sim_results", file_path))
+  all_vij_df <- rbind(all_vij_df, temp)
+}
+mean(all_vij_df$ARDP_time)
+mean(all_vij_df$analysis_time)
 k <- nrow(all_vij_df[sim_i == 1])
 T_edge <- seq_len(k)
 sensSpec_df <- data.table()
 
 max_vijs <- all_vij_df[, .(ARDP_max = max(ARDP_vij), e_max = max(e_vij)),
                        keyby = .(sim_i)]
-mean(max_vijs$ARDP_max <= 0.75)
-mean(max_vijs$e_max <= 0.75)
 FDR_estimate <- function(v, t, e = 0.5) {
   v_s <- v[v > t]
   sum(1 - v_s) / (length(v_s) + e)
@@ -27,6 +31,10 @@ computeNumPositives <- function(v, delta) {
 n_decisions <- all_vij_df[, .(ARDP_boundaries = computeNumPositives(ARDP_vij, delta = 0.15),
                               e_boundaries = computeNumPositives(e_vij, delta = 0.15)),
                           keyby = .(sim_i)]
+lapply(n_decisions[,2:3], mean)
+lapply(n_decisions[,2:3], sd)
+sum(n_decisions$ARDP_boundaries == 0)
+sum(n_decisions$e_boundaries == 0)
 
 computeSens <- function(vij, true_diff, target_T) {
   cutoff <- sort(vij, decreasing = TRUE)[target_T]
@@ -66,7 +74,7 @@ spec_df <- melt(sensSpec_df, id.vars = "n_edge",
                 variable.name = "Method", value.name = "specificity")
 spec_df[, Method := ifelse(Method == "e_spec", "e-difference", "ARDP-DAGAR")]
 roc_df <- merge(sens_df, spec_df, by = c("n_edge", "Method"))
-
+sensSpec_df[n_edge == 90,]
 roc_plot <- ggplot(data = roc_df, aes(x = 1 - specificity, y = sensitivity,
                           group = Method, color = Method, linetype = Method)) +
   geom_line(linewidth = 1.1) +
@@ -98,7 +106,7 @@ diff_prob[, variable := ifelse(variable == "e_vij", "epsilon-difference", "ARDP-
 diff_prob_graph <- ggplot(data = diff_prob) +
   geom_violin(aes(x = variable, y = value), fill = "grey") +
   geom_jitter(aes(x = variable, y = value, color = true_diff),
-              alpha = 0.15, width = 0.2, height = 0) +
+              alpha = 0.05, width = 0.2, height = 0) +
   scale_color_discrete(name = "Boundary", labels = c("Not True Difference", "True Difference")) +
   coord_cartesian(ylim = c(0, 1)) +
   labs(y = "Difference Probability", x = "Difference Probability") +
@@ -107,22 +115,27 @@ diff_prob_graph <- ggplot(data = diff_prob) +
 
 decision_df <- melt(n_decisions, measure.vars = c("ARDP_boundaries", "e_boundaries"))
 decision_graph <- ggplot(data = decision_df) +
-  geom_histogram(aes(x =value, group = variable, fill = variable),
+  geom_histogram(aes(x =value, group = variable, fill = variable, color = variable),
                  position = "identity", alpha = 0.7) +
   theme_bw() +
   labs(x = "Number of Reported Disparities", y = "Simulated Datasets") +
-  scale_fill_discrete(name = "Difference Probability",
+  scale_color_discrete(name = "Method",
+                      labels = c("ARDP-DAGAR", "epsilon-difference")) +
+  scale_fill_discrete(name = "Method",
                       labels = c("ARDP-DAGAR", "epsilon-difference")) +
   theme(legend.position = "bottom")
 decision_graph
 
 
 
-### less smooth scenario: rho = 0.6 ###
-
+### less smooth scenario: rho = 0.7 ###
 
 outputdir <- file.path(getwd(), "output", "CA_sharp_boundary_sim2")
-all_vij_df <- fread(file.path(outputdir, "all_vij_df.csv"))
+all_vij_df <- data.table()
+for(file_path in dir(file.path(outputdir, "sim_results"))) {
+  temp <- fread(file.path(outputdir, "sim_results", file_path))
+  all_vij_df <- rbind(all_vij_df, temp)
+}
 k <- nrow(all_vij_df[sim_i == 1])
 T_edge <- seq_len(k)
 sensSpec_df <- data.table()
@@ -183,7 +196,7 @@ diff_prob[, variable := ifelse(variable == "e_vij", "epsilon-difference", "ARDP-
 diff_prob_graph2 <- ggplot(data = diff_prob) +
   geom_violin(aes(x = variable, y = value), fill = "grey") +
   geom_jitter(aes(x = variable, y = value, color = true_diff),
-              alpha = 0.15, width = 0.2, height = 0) +
+              alpha = 0.10, width = 0.2, height = 0) +
   scale_color_discrete(name = "Boundary", labels = c("Not True Difference", "True Difference")) +
   coord_cartesian(ylim = c(0, 1)) +
   labs(y = "Difference Probability", x = "Difference Probability") +
@@ -192,11 +205,13 @@ diff_prob_graph2 <- ggplot(data = diff_prob) +
 
 decision_df <- melt(n_decisions, measure.vars = c("ARDP_boundaries", "e_boundaries"))
 decision_graph2 <- ggplot(data = decision_df) +
-  geom_histogram(aes(x =value, group = variable, fill = variable),
+  geom_histogram(aes(x =value, group = variable, fill = variable, color = variable),
                  position = "identity", alpha = 0.7) +
   theme_bw() +
   labs(x = "Number of Reported Disparities", y = "Simulated Datasets") +
-  scale_fill_discrete(name = "Difference Probability",
+  scale_color_discrete(name = "Method",
+                      labels = c("ARDP-DAGAR", "epsilon-difference")) +
+  scale_fill_discrete(name = "Method",
                       labels = c("ARDP-DAGAR", "epsilon-difference")) +
   theme(legend.position = "bottom")
 
@@ -210,6 +225,8 @@ rhoPCPrior <- function(rho, Lambda, l) {
   d <- sqrt(2 * KLD(rho, Lambda))
   l * exp(-l * d)
 }
+Lambda <- eigen(Q_scaled)$values
+chosen_lambda <- 0.2
 f <- function(xseq) vapply(xseq, function(x) rhoPCPrior(x, Lambda, chosen_lambda), numeric(1))
 norm <- integrate(f, 0, 1)
 Q_eigen <- eigen(Q_scaled)

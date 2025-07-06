@@ -45,7 +45,7 @@ if(file.exists(file.path(outputdir, "all_vij_df.csv"))) {
   current_i <- max(all_vij_df$sim_i) + 1
 }
 # override setup
-rho <- 0.6
+rho <- 0.7
 sigma2Sp <- rho * sigma2
 sigma2NSp <- (1 - rho) * sigma2
 for (sim_i in seq(current_i, n_sim)) {
