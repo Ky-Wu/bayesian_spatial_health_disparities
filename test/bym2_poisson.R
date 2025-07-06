@@ -95,7 +95,9 @@ data <- list(
   p = ncol(X),
   X = X,
   a0_sigma = a0_sigma,
-  b0_sigma = b0_sigma
+  b0_sigma = b0_sigma,
+  Lambda = eigen(Q_analysis * scaling_factor)$values,
+  lambda_rho = 0.2
 )
 plot(county_sf)
 
@@ -154,12 +156,14 @@ optim_e_vij_order <- order(optim_e_vij, decreasing = F)
 true_diff <- abs(phi_truediff) > optim_e
 #true_diff <- (abs(true_phi_diffs) > optim_e)
 mean(true_diff)
+# number of true difference boundaries
+sum(true_diff)
 
 optim_e_vij <- ComputeSimVij(phi_diffs, epsilon = optim_e)
 optim_e_vij_order <- order(optim_e_vij, decreasing = F)
 
 # indx <- abs(phi_truediff)  > median(abs(phi_truediff))
-indx <- optim_e_vij >= sort(optim_e_vij, decreasing = TRUE)[40]
+indx <- optim_e_vij >= sort(optim_e_vij, decreasing = TRUE)[20]
 detected_borders <- adj_df[indx,]
 county_sf2 <- county_sf
 county_sf2$x <- NULL
@@ -178,7 +182,7 @@ intersections <- lapply(seq_len(sum(indx)), function(i) {
 rates <- Y / E
 rates_boundaries_df <- data.frame(node1_rate = rates[adj_df[indx,]$i],
                                   node2_rate = rates[adj_df[indx,]$j])
-mean(apply(rates_boundaries_df, 1, function(x) all(x < 0.05)))
+sum(apply(rates_boundaries_df, 1, function(x) all(x < 0.05)))
 rate_map <- ggplot() +
   geom_sf(data = county_sf, aes(fill = y / E), color = "black") +
   geom_sf(data = intersections, color = "red", linewidth = 1) +
@@ -193,7 +197,17 @@ lograte_map <- ggplot() +
   coord_sf(crs = st_crs(5070)) +
   theme_bw() +
   theme(legend.position = "bottom", legend.title=element_text(size=10))
-
+#county_sf$mu <- exp(X %*% beta)
+county_sf$phi <- phi
+county_sf$exp_phi <- exp(phi)
+county_sf$exp_gamma <- exp(phi * sqrt(sigma2 * rho))
+gamma_map <- ggplot() +
+  geom_sf(data = county_sf, aes(fill = exp_gamma), color = "black") +
+  geom_sf(data = intersections, color = "red", linewidth = 1) +
+  scale_fill_viridis_c(name = "exp(gamma)") +
+  coord_sf(crs = st_crs(5070)) +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.title=element_text(size=10))
 
 ## rejection order graph
 e2 <- round(optim_e / 3, digits = 3)
@@ -398,7 +412,7 @@ roc_plot_s <- pROC::ggroc(roc_list[1], linewidth = 0.8) +
   theme(legend.position = "none") +
   labs(x = "Specificity", y = "Sensitivity")
 
-fig <- ggpubr::ggarrange(rate_map, lograte_map, roc_plot_s, stability_plot2,
+fig <- ggpubr::ggarrange(rate_map, gamma_map, roc_plot_s, stability_plot2,
                          nrow = 1)
 ggsave(file.path(getwd(), "output", "poisson_sim", "std_diff_results.png"),
        width = 9, height = 4, units = "in", fig, dpi = 400, scale = 1.7)
