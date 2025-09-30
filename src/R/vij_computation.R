@@ -103,3 +103,22 @@ VijOrderGraph <- function(phi_diffs, ij_list, optim_e,
   }
   vij_order_graph
 }
+
+ComputeFDREps <- function(phi_diffs, delta, T_edge, tol = 1e-7) {
+  lower_eps <- 0.01
+  upper_eps <- 5.0
+  while((upper_eps - lower_eps) > tol) {
+    eps <- (upper_eps + lower_eps) / 2
+    e_vij <- ComputeSimVij(phi_diffs, epsilon = eps)
+    FDR <- FDR_estimate(e_vij, sort(e_vij, decreasing = TRUE)[T_edge + 1])
+    if (FDR > delta) {
+      upper_eps <- eps
+    } else {
+      lower_eps <- eps
+    }
+  }
+  list(eps = lower_eps,
+       FDR = FDR_estimate(e_vij, lower_eps),
+       e_vij = e_vij)
+}
+
