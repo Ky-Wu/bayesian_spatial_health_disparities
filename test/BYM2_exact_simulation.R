@@ -61,7 +61,7 @@ sum(abs(phi_truediffs) > optim_e)
 # select cutoff t in d(i, j) = I(v_ij > t) to control FDR and minimize FNR
 optim_e_vij <- ComputeSimVij(phi_diffs, epsilon = optim_e)
 
-eta <- .10
+eta <- .05
 t_seq_length <- 10000
 t_seq <- seq(0, max(optim_e_vij) - .001, length.out = t_seq_length)
 t_FDR <- vapply(t_seq, function(t) FDR_estimate(optim_e_vij, t, e = 0), numeric(1))
@@ -86,12 +86,12 @@ e4_vij_order <- order(e4_vij[optim_e_vij_order], decreasing = F)
 e5_vij_order <- order(e5_vij[optim_e_vij_order], decreasing = F)
 true_diff <- (abs(phi_truediffs) > optim_e)
 rejection_path <- data.table(
-  optim_e_vij = seq_along(optim_e_vij),
-  e2_vij_order = e2_vij_order,
-  e3_vij_order = e3_vij_order,
-  e4_vij_order = e4_vij_order,
-  e5_vij_order = e5_vij_order,
-  true_diff = true_diff[optim_e_vij_order]
+  optim_e_vij = as.numeric(optim_e_vij),
+  e2_vij_order = as.numeric(e2_vij),
+  e3_vij_order = as.numeric(e3_vij),
+  e4_vij_order = as.numeric(e4_vij),
+  e5_vij_order = as.numeric(e5_vij),
+  true_diff = as.vector(true_diff)
 )
 rejection_path <- melt(rejection_path,
                        id.vars = c("optim_e_vij", "true_diff"),
