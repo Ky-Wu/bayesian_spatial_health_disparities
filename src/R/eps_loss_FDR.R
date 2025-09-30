@@ -26,22 +26,29 @@ ConditionalEntropy <- function(V) {
 }
 
 FDR_estimate <- function(v, t, e = 0.5) {
-  v_s <- v[v > t]
+  v_s <- v[v >= t]
   sum(1 - v_s) / (length(v_s) + e)
 }
 
 FNR_estimate <- function(v, t, e = 0.5) {
-  v_s <- v[v <= t]
+  v_s <- v[v < t]
   sum(v_s) / (length(v_s) + e)
 }
 
 FD_estimate <- function(v, t) {
-  v_s <- v[v > t]
+  v_s <- v[v >= t]
   sum(1 - v_s)
 }
 FN_estimate <- function(v, t) {
-  v_s <- v[v <= t]
+  v_s <- v[v < t]
   sum(v_s)
+}
+
+computeFDRCutoff <- function(diff_prob, delta) {
+  t_seq <- sort(unique(diff_prob), decreasing = FALSE)
+  t_FDR <- vapply(t_seq, function(t) FDR_estimate(diff_prob, t, e = 0), numeric(1))
+  optim_t <- min(c(t_seq[t_FDR <= delta], 1), na.rm = TRUE)
+  list(cutoff = optim_t, FDR_estimate = FDR_estimate(diff_prob, t = optim_t, e = 0))
 }
 
 ComputeFDRFNRCurves <- function(V, t_seq, eps_seq, denom_e = 0.1) {
