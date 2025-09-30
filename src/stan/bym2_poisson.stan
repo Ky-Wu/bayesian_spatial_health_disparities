@@ -1,3 +1,13 @@
+functions{
+  real rhoPCPrior_log(real x, int N, vector L, real l) {
+    real kld = -N / 2;
+    kld = kld + sum(x / L + (1 - x)) / 2;
+    kld = kld - sum(log(x / L + (1 - x))) / 2;
+    real d = sqrt(2 * kld);
+    d =  log(l) - (l * d);
+    return d;
+  }
+}
 data {
   int<lower=0> N;
   // matrix[N, N] Sigma_scaled; // var-cov matrix of phi
@@ -9,6 +19,8 @@ data {
   matrix[N, p] X; // design matrix
   real<lower=0> a0_sigma;
   real<lower=0> b0_sigma;
+  real<lower=0> lambda_rho;
+  vector<lower=0>[N] Lambda;
 }
 transformed data {
   vector[N] log_E = log(E);
@@ -33,7 +45,8 @@ model {
   eps ~ normal(0.0, 1.0);
   //phi ~ multi_normal(mu_phi, Sigma_scaled);
   sigma2 ~ inv_gamma(a0_sigma, b0_sigma);
-  rho ~ beta(1, 1);
+  //rho ~ beta(1, 1);
+  rho ~ rhoPCPrior(N, Lambda, lambda_rho);
 }
 generated quantities {
   real logit_rho = log(rho / (1.0 - rho));
