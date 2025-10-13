@@ -289,7 +289,7 @@ prob_comparison <- ggplot(data = comparison_df) +
   geom_abline(intercept = 0, slope = 1, linetype = 2) +
   coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
   theme_minimal() +
-  labs(x = "Difference Probability (PC Prior Model)", y = "Difference Probability (Exact Model)") +
+  labs(x = "Difference Probability (PC Prior Model)", y = "Difference Probability (Conditioned Model)") +
   scale_color_discrete(name = "County Pair", labels = c("No Disparity", "Disparity")) +
   scale_shape_discrete(name = "County Pair", labels = c("No Disparity", "Disparity"))
 
@@ -334,3 +334,7 @@ ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "rho_hist.png"),
        width = 6, height = 4.5, units = "in", rho_hist)
 ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "auc.png"),
        width = 4.5, height = 6, units = "in", roc_plot)
+
+roc_probs <- ggpubr::ggarrange(roc_plot, prob_comparison, legend = "bottom")
+ggsave(file.path(getwd(), "output", "US_gibbs_sample_sim", "roc_probs.png"),
+       width = 9, height = 6, units = "in", roc_probs)
