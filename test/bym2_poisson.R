@@ -56,15 +56,16 @@ rownames(adj_df) <- NULL
 beta <- c(-5, 0.5)
 cent_coords <- st_coordinates(county_cent)
 mean_lat <- mean(cent_coords[,2])
-x <- numeric(N)
-high_risk <- cent_coords[,2] > mean_lat
-x[high_risk] <- rnorm(sum(high_risk), mean = 2, sd = 1)
-x[!high_risk] <- rnorm(sum(!high_risk), mean = -2, sd = 1)
+#x <- numeric(N)
+#high_risk <- cent_coords[,2] > mean_lat
+#x[high_risk] <- rnorm(sum(high_risk), mean = 2, sd = 1)
+#x[!high_risk] <- rnorm(sum(!high_risk), mean = -2, sd = 1)
+x <- rnorm(N, mean = 2, sd = 1)
 county_sf$x <- x
 X <- cbind(1, x)
 E <- ceiling(runif(N, 10000, 5e5))
-E[high_risk] <- ceiling(runif(sum(high_risk), 10000, 50000))
-E[!high_risk] <- ceiling(runif(sum(!high_risk), 50000, 5e5))
+#E[high_risk] <- ceiling(runif(sum(high_risk), 10000, 50000))
+#E[!high_risk] <- ceiling(runif(sum(!high_risk), 50000, 5e5))
 sigma2 <- 2
 rho <- 0.93
 #phi <- solve(Q_scaled_cholR, rnorm(N))
@@ -125,11 +126,18 @@ HDInterval::hdi(rho_samps)
 V_est <- cov(phi_samps)
 n_s <- nrow(phi_samps)
 k <- nrow(adj_df)
+phi_pmeans <- colMeans(phi_samps)
 phi_diffs <- vapply(seq_len(k), function(pair_indx) {
   i <- adj_df[pair_indx,]$i
   j <- adj_df[pair_indx,]$j
   var <- V_est[i, i] + V_est[j, j] - 2 * V_est[i, j]
   (phi_samps[,i] - phi_samps[,j]) / sqrt(var)
+}, numeric(n_s))
+g_phi_diffs <-  vapply(seq_len(k), function(pair_indx) {
+  i <- adj_df[pair_indx,]$i
+  j <- adj_df[pair_indx,]$j
+  d <- exp(abs(phi_samps[,i] - phi_samps[,j]))
+  d
 }, numeric(n_s))
 
 phi_truediff <- vapply(seq_len(k), function(pair_indx) {
@@ -139,8 +147,14 @@ phi_truediff <- vapply(seq_len(k), function(pair_indx) {
   var <- Sigma[i, i] + Sigma[j, j] - 2 * Sigma[i, j]
   (phi[i] - phi[j]) / sqrt(var)
 }, numeric(1))
-
-
+g_phi_truediff <- vapply(seq_len(k), function(pair_indx) {
+  i <- adj_df[pair_indx,]$i
+  j <- adj_df[pair_indx,]$j
+  #var <- V_est[i, i] + V_est[j, j] - 2 * V_est[i, j]
+  log_var <- Sigma[i, i] + Sigma[j, j] - 2 * Sigma[i, j]
+  d <- exp(abs(phi[i] - phi[j]))
+  d
+}, numeric(1))
 
 loss_function <- function(v, epsilon) -ConditionalEntropy(v)
 system.time({
@@ -158,9 +172,6 @@ true_diff <- abs(phi_truediff) > optim_e
 mean(true_diff)
 # number of true difference boundaries
 sum(true_diff)
-
-optim_e_vij <- ComputeSimVij(phi_diffs, epsilon = optim_e)
-optim_e_vij_order <- order(optim_e_vij, decreasing = F)
 
 # indx <- abs(phi_truediff)  > median(abs(phi_truediff))
 indx <- optim_e_vij >= sort(optim_e_vij, decreasing = TRUE)[20]
@@ -183,6 +194,7 @@ rates <- Y / E
 rates_boundaries_df <- data.frame(node1_rate = rates[adj_df[indx,]$i],
                                   node2_rate = rates[adj_df[indx,]$j])
 sum(apply(rates_boundaries_df, 1, function(x) all(x < 0.05)))
+county_sf$phi <- phi
 rate_map <- ggplot() +
   geom_sf(data = county_sf, aes(fill = y / E), color = "black") +
   geom_sf(data = intersections, color = "red", linewidth = 1) +
@@ -199,15 +211,58 @@ lograte_map <- ggplot() +
   theme(legend.position = "bottom", legend.title=element_text(size=10))
 #county_sf$mu <- exp(X %*% beta)
 county_sf$phi <- phi
+county_sf$gamma <- phi * sqrt(sigma2 * rho)
 county_sf$exp_phi <- exp(phi)
 county_sf$exp_gamma <- exp(phi * sqrt(sigma2 * rho))
+county_sf$phi_pmean <- phi_pmeans
 gamma_map <- ggplot() +
-  geom_sf(data = county_sf, aes(fill = exp_gamma), color = "black") +
+  geom_sf(data = county_sf, aes(fill = gamma), color = "black") +
   geom_sf(data = intersections, color = "red", linewidth = 1) +
-  scale_fill_viridis_c(name = "exp(gamma)") +
+  scale_fill_viridis_c(name = "gamma") +
   coord_sf(crs = st_crs(5070)) +
   theme_bw() +
+  labs(title = "Top 20 Log-Rate Disparities") +
   theme(legend.position = "bottom", legend.title=element_text(size=10))
+gamma_map
+
+
+system.time({
+  eps_optim2 <- optim(1, function(e) {
+    e_vij <- ComputeSimVij(g_phi_diffs, epsilon = e)
+    loss_function(e_vij, epsilon = e)
+  }, method = "Brent", lower = 0.001, upper = 5.0)
+})
+optim_e_exp <- eps_optim2$par
+true_diff_exp <- abs(g_phi_truediff) > optim_e_exp
+optim_e_vij_exp <- ComputeSimVij(g_phi_diffs, epsilon = optim_e_exp)
+
+# indx <- abs(phi_truediff)  > median(abs(phi_truediff))
+indx <- optim_e_vij_exp >= sort(optim_e_vij_exp, decreasing = TRUE)[20]
+detected_borders <- adj_df[indx,]
+county_sf2 <- county_sf
+county_sf2$x <- NULL
+node1_all <- county_sf2[detected_borders$i,]
+node2_all <- county_sf2[detected_borders$j,]
+sf_use_s2(FALSE)
+intersections2 <- lapply(seq_len(sum(indx)), function(i) {
+  #print(i)
+  node1 <- node1_all[i,]
+  node2 <- node2_all[i,]
+  suppressMessages(st_intersection(st_buffer(node1, 0.001),
+                                   st_buffer(node2, 0.001)))
+
+}) %>%
+  do.call(rbind, .)
+gamma_map2 <- ggplot() +
+  geom_sf(data = county_sf, aes(fill = gamma), color = "black") +
+  geom_sf(data = intersections2, color = "red", linewidth = 1) +
+  scale_fill_viridis_c(name = "gamma") +
+  coord_sf(crs = st_crs(5070)) +
+  theme_bw() +
+  theme(legend.position = "bottom", legend.title=element_text(size=10)) +
+  labs(title = "Top 20 IRR Disparities")
+gamma_map2
+
 
 ## rejection order graph
 e2 <- round(optim_e / 3, digits = 3)
@@ -341,6 +396,13 @@ sum(indx1)
 rank_stability_score <- cor(rank(e2_vij[indx1]), rank(e5_vij[indx1]))
 indx2 <- optim_e_vij2 >= sort(optim_e_vij2)[100]
 rank_stability_score2 <- cor(rank(e2_vij2[indx2]), rank(e5_vij2[indx2]))
+
+# indx3 <- optim_e_vij_exp >= sort(optim_e_vij_exp)[100]
+# rank_stability_score3 <- cor(
+#   rank(ComputeSimVij(g_phi_diffs, epsilon = optim_e_exp / 3)[indx3]),
+#   rank(ComputeSimVij(g_phi_diffs, epsilon = optim_e_exp * 3)[indx3])
+# )
+
 Wt2 <- DescTools::KendallW(cbind(rank(e2_vij2[indx2]), rank(e5_vij2[indx2])),
                            correct = TRUE, test = TRUE)
 rank_stability_df <- data.table(
@@ -351,7 +413,8 @@ rank_stability_df
 
 roc_list <- list(
   "Standardized Difference" = pROC::roc(as.vector(true_diff), as.vector(optim_e_vij)),
-  "Unstandardized Difference" = pROC::roc(as.vector(true_diff2), as.vector(optim_e_vij2))
+  "Unstandardized Difference" = pROC::roc(as.vector(true_diff2), as.vector(optim_e_vij2)),
+  "IRR Probability" = pROC::roc(as.vector(true_diff_exp), as.vector(optim_e_vij_exp))
 )
 auc_values <- vapply(roc_list, function(x) x$auc, numeric(1))
 auc_values
@@ -412,7 +475,7 @@ roc_plot_s <- pROC::ggroc(roc_list[1], linewidth = 0.8) +
   theme(legend.position = "none") +
   labs(x = "Specificity", y = "Sensitivity")
 
-fig <- ggpubr::ggarrange(rate_map, gamma_map, roc_plot_s, stability_plot2,
+fig <- ggpubr::ggarrange(gamma_map, gamma_map2, roc_plot,
                          nrow = 1)
 ggsave(file.path(getwd(), "output", "poisson_sim", "std_diff_results.png"),
        width = 9, height = 4, units = "in", fig, dpi = 400, scale = 1.7)
