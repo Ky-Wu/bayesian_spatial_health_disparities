@@ -6,7 +6,7 @@ library(ggpubr)
 library(rjags)
 library(R2jags)
 library(Matrix)
-library(rstan)
+#library(rstan)
 library(pROC)
 rm(list = ls())
 
@@ -56,7 +56,7 @@ for (sim_i in seq(current_i, n_sim)) {
                           lower_rho, upper_rho, lambda_rho)
     BYM2Sampler$initOLS()
     BYM2Sampler$burnMCMCSample(40000)
-    # fit BYM2 model (rstan only for small data)
+    # fit BYM2 model
     samps <- BYM2Sampler$MCMCSample(20000)
     gamma_sim <- samps$gamma
     rho_sim <- samps$rho

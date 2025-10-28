@@ -86,8 +86,8 @@ chosen_lambda <- min(l_seq[alphas >= alpha])
 chosen_lambda
 
 f <- function(xseq) vapply(xseq, function(x) rhoPCPrior(x, Lambda, chosen_lambda), numeric(1))
-res <- integrate(f, lower = 0, upper = 0.5)
 norm <- integrate(f, 0, 1)
+res <- integrate(f, lower = 0, upper = 0.5)
 res$value / norm$value
 
 samps <- samplePCPrior(100000, Lambda, chosen_lambda)

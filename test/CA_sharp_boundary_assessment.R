@@ -5,6 +5,10 @@ rm(list = ls())
 
 source(file.path(getwd(), "src", "R", "simulation", "CA_sharp_boundary_sim_setup.R"))
 outputdir <- file.path(getwd(), "output", "CA_sharp_boundary_sim")
+LISA_results <- fread(file.path(getwd(), "output", "CA_sharp_boundary_sim", "LISA_results.csv"))
+with(LISA_results, {
+  sum(LISA_diff_boundary & !true_diff) / sum(LISA_diff_boundary)
+})
 all_vij_df <- data.table()
 for(file_path in dir(file.path(outputdir, "sim_results"))) {
   temp <- fread(file.path(outputdir, "sim_results", file_path))
@@ -19,23 +23,44 @@ sensSpec_df <- data.table()
 max_vijs <- all_vij_df[, .(ARDP_max = max(ARDP_vij), e_max = max(e_vij)),
                        keyby = .(sim_i)]
 FDR_estimate <- function(v, t, e = 0.5) {
-  v_s <- v[v > t]
+  v_s <- v[v >= t]
   sum(1 - v_s) / (length(v_s) + e)
 }
-computeNumPositives <- function(v, delta) {
+computeCutoff <- function(v, delta) {
   v_s <- sort(v, decreasing = FALSE)
-  FDRs <- vapply(v_s, function(x) FDR_estimate(v, x, e = 0.01), numeric(1))
-  tstar <- v_s[which.max(FDRs <= delta)]
-  sum(v_s > tstar)
+  FDRs <- vapply(c(v_s, 1), function(x) FDR_estimate(v, x, e = 0.01), numeric(1))
+  c(v_s, 1)[which.max(FDRs <= delta)]
 }
-n_decisions <- all_vij_df[, .(ARDP_boundaries = computeNumPositives(ARDP_vij, delta = 0.15),
-                              e_boundaries = computeNumPositives(e_vij, delta = 0.15)),
-                          keyby = .(sim_i)]
-lapply(n_decisions[,2:3], mean)
-lapply(n_decisions[,2:3], sd)
+computeDecisions <- function(v, delta) {
+  tstar <- computeCutoff(v, delta)
+  d <- v >= tstar
+}
+computeNumPositives <- function(v, delta) {
+  d <- computeDecisions(v, delta)
+  sum(d)
+}
+computeTrueFDR <- function(d, true_diff) {
+  sum(d & !true_diff) / sum(d)
+}
+all_res <- merge(all_vij_df, LISA_results, by = c("sim_i", "pair_indx"))
+decisions <- all_res[, .(e_decisions = computeDecisions(e_vij, delta = 0.15),
+                            ARDP_decisions = computeDecisions(ARDP_vij, delta = 0.15),
+                            LISA_diff_boundary = LISA_diff_boundary,
+                            true_diff = true_diff),
+                        keyby = .(sim_i)]
+# true FDR
+decisions[, .(FDR = computeTrueFDR(e_decisions, true_diff),
+             ARDP_FDR = computeTrueFDR(ARDP_decisions, true_diff),
+             LISA_FDR = computeTrueFDR(LISA_diff_boundary, true_diff))]
+n_decisions <- decisions[, .(e_boundaries = sum(e_decisions),
+                             ARDP_boundaries = sum(ARDP_decisions),
+                             LISA_boundaries = sum(LISA_diff_boundary)),
+                         keyby = .(sim_i)]
+lapply(n_decisions[,2:4], mean)
+lapply(n_decisions[,2:4], sd)
 sum(n_decisions$ARDP_boundaries == 0)
 sum(n_decisions$e_boundaries == 0)
-
+sum(n_decisions$LISA_boundaries == 0)
 computeSens <- function(vij, true_diff, target_T) {
   cutoff <- sort(vij, decreasing = TRUE)[target_T]
   pred_diff <- vij >= cutoff
@@ -48,6 +73,7 @@ computeSpec <- function(vij, true_diff, target_T) {
   tn <- !pred_diff & !true_diff
   sum(tn) / sum(!true_diff)
 }
+
 
 for(target_t in T_edge) {
   new_row <- all_vij_df[, .(
@@ -68,11 +94,11 @@ for(target_t in T_edge) {
 sens_df <- melt(sensSpec_df, id.vars = "n_edge",
                 measure.vars = c("e_sens", "ARDP_sens"),
                 variable.name = "Method", value.name = "sensitivity")
-sens_df[, Method := ifelse(Method == "e_sens", "e-difference", "ARDP-DAGAR")]
+sens_df[, Method := ifelse(Method == "e_sens", "epsilon-difference", "ARDP-DAGAR")]
 spec_df <- melt(sensSpec_df, id.vars = "n_edge",
                 measure.vars = c("e_spec", "ARDP_spec"),
                 variable.name = "Method", value.name = "specificity")
-spec_df[, Method := ifelse(Method == "e_spec", "e-difference", "ARDP-DAGAR")]
+spec_df[, Method := ifelse(Method == "e_spec", "epsilon-difference", "ARDP-DAGAR")]
 roc_df <- merge(sens_df, spec_df, by = c("n_edge", "Method"))
 sensSpec_df[n_edge == 90,]
 roc_plot <- ggplot(data = roc_df, aes(x = 1 - specificity, y = sensitivity,
@@ -81,7 +107,8 @@ roc_plot <- ggplot(data = roc_df, aes(x = 1 - specificity, y = sensitivity,
   geom_abline(intercept = 0, slope = 1, linetype = 3, color = "grey") +
   theme_bw() +
   theme(legend.position = "bottom") +
-  labs(x = "False Positive Rate", y = "True Positive Rate")
+  labs(x = "False Positive Rate", y = "True Positive Rate") +
+  scale_color_manual(values = c("red", "dodgerblue"))
 
 county_sf$`Spatial Effect` <- factor(round(phi_d, digits = 2), ordered = TRUE)
 spatial_map <- ggplot(data = county_sf) +
@@ -92,8 +119,8 @@ spatial_map <- ggplot(data = county_sf) +
   theme(legend.position = "bottom")
 
 e_roc <- pROC::roc(sample(c(0, 1), k, replace = T), runif(k))
-e_roc$sensitivities[1:k] <- rev(roc_df[Method == "e-difference",]$sensitivity)
-e_roc$specificities[1:k] <- rev(roc_df[Method == "e-difference",]$specificity)
+e_roc$sensitivities[1:k] <- rev(roc_df[Method == "epsilon-difference",]$sensitivity)
+e_roc$specificities[1:k] <- rev(roc_df[Method == "epsilon-difference",]$specificity)
 e_roc$auc <- auc(e_roc)
 ARDP_roc <- pROC::roc(sample(c(0, 1), k, replace = T), runif(k))
 ARDP_roc$sensitivities[1:k] <- rev(roc_df[Method == "ARDP-DAGAR",]$sensitivity)
@@ -111,18 +138,21 @@ diff_prob_graph <- ggplot(data = diff_prob) +
   coord_cartesian(ylim = c(0, 1)) +
   labs(y = "Difference Probability", x = "Difference Probability") +
   theme_bw() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  guides(color = guide_legend(override.aes = list(alpha = 0.25)))
 
-decision_df <- melt(n_decisions, measure.vars = c("ARDP_boundaries", "e_boundaries"))
+decision_df <- melt(n_decisions, measure.vars = c("ARDP_boundaries", "e_boundaries", "LISA_boundaries"))
 decision_graph <- ggplot(data = decision_df) +
   geom_histogram(aes(x =value, group = variable, fill = variable, color = variable),
-                 position = "identity", alpha = 0.7) +
+                 position = "identity", alpha = 0.5) +
   theme_bw() +
   labs(x = "Number of Reported Disparities", y = "Simulated Datasets") +
-  scale_color_discrete(name = "Method",
-                      labels = c("ARDP-DAGAR", "epsilon-difference")) +
-  scale_fill_discrete(name = "Method",
-                      labels = c("ARDP-DAGAR", "epsilon-difference")) +
+  scale_color_manual(name = "Method",
+                     labels = c("ARDP-DAGAR", "epsilon-difference", "Local Moran's I"),
+                     values = c("red", "dodgerblue", "darkgreen")) +
+  scale_fill_manual(name = "Method",
+                    labels = c("ARDP-DAGAR", "epsilon-difference", "Local Moran's I"),
+                    values = c("red", "dodgerblue", "darkgreen")) +
   theme(legend.position = "bottom")
 decision_graph
 
@@ -131,6 +161,14 @@ decision_graph
 ### less smooth scenario: rho = 0.7 ###
 
 outputdir <- file.path(getwd(), "output", "CA_sharp_boundary_sim2")
+LISA_results <- fread(file.path(getwd(), "output", "CA_sharp_boundary_sim2", "LISA_results.csv"))
+caret::confusionMatrix(factor(LISA_results$LISA_diff_boundary), factor(LISA_results$true_diff), positive = "TRUE")
+# true FDR
+with(LISA_results, {
+  sum(LISA_diff_boundary & !true_diff) / sum(LISA_diff_boundary)
+})
+
+
 all_vij_df <- data.table()
 for(file_path in dir(file.path(outputdir, "sim_results"))) {
   temp <- fread(file.path(outputdir, "sim_results", file_path))
@@ -144,9 +182,22 @@ max_vijs <- all_vij_df[, .(ARDP_max = max(ARDP_vij), e_max = max(e_vij)),
                        keyby = .(sim_i)]
 mean(max_vijs$ARDP_max <= 0.75)
 mean(max_vijs$e_max <= 0.75)
-n_decisions <- all_vij_df[, .(ARDP_boundaries = computeNumPositives(ARDP_vij, delta = 0.15),
-                              e_boundaries = computeNumPositives(e_vij, delta = 0.15)),
-                          keyby = .(sim_i)]
+all_res <- merge(all_vij_df, LISA_results, by = c("sim_i", "pair_indx"))
+decisions <- all_res[, .(e_decisions = computeDecisions(e_vij, delta = 0.15),
+                         ARDP_decisions = computeDecisions(ARDP_vij, delta = 0.15),
+                         LISA_diff_boundary = LISA_diff_boundary,
+                         true_diff = true_diff),
+                     keyby = .(sim_i)]
+# true FDR
+decisions[, .(FDR = computeTrueFDR(e_decisions, true_diff),
+              ARDP_FDR = computeTrueFDR(ARDP_decisions, true_diff),
+              LISA_FDR = computeTrueFDR(LISA_diff_boundary, true_diff))]
+n_decisions <- decisions[, .(e_boundaries = sum(e_decisions),
+                             ARDP_boundaries = sum(ARDP_decisions),
+                             LISA_boundaries = sum(LISA_diff_boundary)),
+                         keyby = .(sim_i)]
+lapply(n_decisions[,2:4], mean)
+lapply(n_decisions[,2:4], sd)
 
 for(target_t in T_edge) {
   new_row <- all_vij_df[, .(
@@ -167,11 +218,11 @@ for(target_t in T_edge) {
 sens_df <- melt(sensSpec_df, id.vars = "n_edge",
                 measure.vars = c("e_sens", "ARDP_sens"),
                 variable.name = "Method", value.name = "sensitivity")
-sens_df[, Method := ifelse(Method == "e_sens", "e-difference", "ARDP-DAGAR")]
+sens_df[, Method := ifelse(Method == "e_sens", "epsilon-difference", "ARDP-DAGAR")]
 spec_df <- melt(sensSpec_df, id.vars = "n_edge",
                 measure.vars = c("e_spec", "ARDP_spec"),
                 variable.name = "Method", value.name = "specificity")
-spec_df[, Method := ifelse(Method == "e_spec", "e-difference", "ARDP-DAGAR")]
+spec_df[, Method := ifelse(Method == "e_spec", "epsilon-difference", "ARDP-DAGAR")]
 roc_df <- merge(sens_df, spec_df, by = c("n_edge", "Method"))
 
 roc_plot2 <- ggplot(data = roc_df, aes(x = 1 - specificity, y = sensitivity,
@@ -180,11 +231,12 @@ roc_plot2 <- ggplot(data = roc_df, aes(x = 1 - specificity, y = sensitivity,
   geom_abline(intercept = 0, slope = 1, linetype = 3, color = "grey") +
   theme_bw() +
   theme(legend.position = "bottom") +
-  labs(x = "False Positive Rate", y = "True Positive Rate")
+  labs(x = "False Positive Rate", y = "True Positive Rate") +
+  scale_color_manual(values = c("red", "dodgerblue"))
 
 e_roc <- pROC::roc(sample(c(0, 1), k, replace = T), runif(k))
-e_roc$sensitivities[1:k] <- rev(roc_df[Method == "e-difference",]$sensitivity)
-e_roc$specificities[1:k] <- rev(roc_df[Method == "e-difference",]$specificity)
+e_roc$sensitivities[1:k] <- rev(roc_df[Method == "epsilon-difference",]$sensitivity)
+e_roc$specificities[1:k] <- rev(roc_df[Method == "epsilon-difference",]$specificity)
 e_roc$auc <- auc(e_roc)
 ARDP_roc <- pROC::roc(sample(c(0, 1), k, replace = T), runif(k))
 ARDP_roc$sensitivities[1:k] <- rev(roc_df[Method == "ARDP-DAGAR",]$sensitivity)
@@ -201,18 +253,21 @@ diff_prob_graph2 <- ggplot(data = diff_prob) +
   coord_cartesian(ylim = c(0, 1)) +
   labs(y = "Difference Probability", x = "Difference Probability") +
   theme_bw() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  guides(color = guide_legend(override.aes = list(alpha = 0.25)))
 
-decision_df <- melt(n_decisions, measure.vars = c("ARDP_boundaries", "e_boundaries"))
+decision_df <- melt(n_decisions, measure.vars = c("ARDP_boundaries", "e_boundaries", "LISA_boundaries"))
 decision_graph2 <- ggplot(data = decision_df) +
   geom_histogram(aes(x =value, group = variable, fill = variable, color = variable),
                  position = "identity", alpha = 0.7) +
   theme_bw() +
   labs(x = "Number of Reported Disparities", y = "Simulated Datasets") +
-  scale_color_discrete(name = "Method",
-                      labels = c("ARDP-DAGAR", "epsilon-difference")) +
-  scale_fill_discrete(name = "Method",
-                      labels = c("ARDP-DAGAR", "epsilon-difference")) +
+  scale_color_manual(name = "Method",
+                      labels = c("ARDP-DAGAR", "epsilon-difference", "Local Moran's I"),
+                     values = c("red", "dodgerblue", "darkgreen")) +
+  scale_fill_manual(name = "Method",
+                      labels = c("ARDP-DAGAR", "epsilon-difference", "Local Moran's I"),
+                      values = c("red", "dodgerblue", "darkgreen")) +
   theme(legend.position = "bottom")
 
 
@@ -263,4 +318,4 @@ p3 <- ggarrange(decision_graph, decision_graph2, ncol = 1, common.legend = TRUE)
 all_performance <- ggarrange(p1, p2, p3, ncol = 3)
 ggsave(file.path(file.path(getwd(), "output", "CA_sharp_boundary_sim"),
                  "all_performance.png"), all_performance,
-       width = 12, height = 8, dpi = 500)
+       width = 13, height = 8, dpi = 500)
