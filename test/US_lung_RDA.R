@@ -24,7 +24,10 @@ source(file.path(getwd(), "src", "R", "RDA", "US_data_setup.R"))
 Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2ExactSampling.cpp"))
 Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2_flatbeta_MCMC.cpp"))
 
-X <- cbind(1, cancer_smoking_sf$total_mean_smoking)
+X <- with(cancer_smoking_sf, {
+  cbind(1, total_mean_smoking,
+        unemployed_2014, SVI_2014, physical_inactivity_2014, uninsured_2012_2016)
+})
 y <- cancer_smoking_sf$mortality2014
 # Test for spatial autocorrelation
 ols_fit <- lm(y ~ X)
@@ -109,13 +112,9 @@ optim_e <- eps_optim$par
 optim_e_vij <- ComputeSimVij(phi_diffs,
                              epsilon = optim_e)
 # select cutoff t in d(i, j) = I(v_ij > t) to control FDR and minimize FNR
-eta <- .05
-t_seq_length <- 10000
-t_seq <- seq(0, max(optim_e_vij) - .001, length.out = t_seq_length)
-t_FDR <- vapply(t_seq, function(t) FDR_estimate(optim_e_vij, t, e = 0), numeric(1))
-t_FNR <- vapply(t_seq, function(t) FNR_estimate(optim_e_vij, t, e = 0), numeric(1))
-optim_t <- min(c(t_seq[t_FDR <= eta], 1))
-optim_t
+delta <- .05
+FDR_res <- computeFDRCutoff(optim_e_vij, delta = delta)
+optim_t <- FDR_res$cutoff
 
 sum(optim_e_vij >= optim_t)
 
@@ -245,7 +244,7 @@ ols_e_map <- ggplot() +
 yfit_pmeans_map <- ggplot() +
   geom_sf(data = county_sf, col = "gray") +
   geom_sf(data = yfit_pmeans_sf, aes(fill = y_pmeans), col = "gray") +
-  scale_fill_viridis_d(name = "Y posterior mean", drop = FALSE) +
+  scale_fill_viridis_d(name = "Lung Cancer Mortality Posterior Mean", drop = FALSE) +
   geom_sf(data = intersections, col = "red", alpha = 0, lwd = 0.4) +
   coord_sf(crs = st_crs(5070)) +
   theme_bw() +
@@ -281,8 +280,16 @@ params_summary <- apply(params_sim, MARGIN = 2, function(x) {
   do.call(rbind, .)
 round_digits <- 3
 params_summary[, `:=`(
-  Parameter = c("$\\beta_0$", "$\\beta_1$", "$\\sigma^2$", "$\\rho$"),
-  Description = c("Intercept", "Smoking prevalence", "Total variance", "Spatial proportion of variance"),
+  Parameter = c("$\\beta_0$", "$\\beta_1$", "$\\beta_2$", "$\\beta_3$",
+                "$\\beta_4$", "$\\beta_5$", "$\\sigma^2$", "$\\rho$"),
+  Description = c("Intercept",
+                  "Smoking prevalence",
+                  "Unemployment Percentile",
+                  "SVI Percentile",
+                  "Physically Inactive (\\%)",
+                  "Uninsured (\\%)",
+                  "Total variance",
+                  "Spatial proportion of variance"),
   `Mean` = round(mean, digits = round_digits),
   `95\\% Credible Interval` = paste0("(", round(lower, digits = round_digits), ", ",
                     round(upper, digits = round_digits), ")")

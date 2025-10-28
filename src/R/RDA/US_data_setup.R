@@ -6,6 +6,20 @@ library(maptools)
 library(data.table)
 library(openxlsx)
 
+unemployment <- fread(file.path(getwd(), "data", "DiabetesAtlasData_unemployment_2014.csv"))
+unemployment <- unemployment[, .(County_FIPS, County, State,
+                                 unemployed_2014 = `Unemployed-2014-Percentile`)]
+SVI <- fread(file.path(getwd(), "data", "DiabetesAtlasData_SVI_2014.csv"))
+SVI <- SVI[, .(County_FIPS, SVI_2014 = `Overall Socioeconomic Status-2014-Percentile`)]
+inactivity_uninsured <- fread(file.path(getwd(), "data", "DiabetesAtlasData_inactivity_uninsured.csv"))
+inactivity_uninsured <- inactivity_uninsured[, .(County_FIPS,
+                                                 physical_inactivity_2014 = `Physical Inactivity-2014-Percentage`,
+                                                 uninsured_2012_2016 = `No Health Insurance-2012-2016-Percentage`)]
+predictors <- unemployment[SVI, on = .(County_FIPS)][inactivity_uninsured, on = .(County_FIPS)]
+predictors[] <- lapply(predictors, function(x) ifelse(x == "No Data", NA, x))
+target_cols <- colnames(predictors)[4:7]
+predictors[, target_cols[] := lapply(.SD, as.numeric), .SDcols = target_cols]
+
 # Import US counties
 county_poly <- maps::map("county", fill = TRUE, plot = FALSE)
 county_state <- strsplit(county_poly$names, ",") %>%
@@ -72,7 +86,11 @@ cancer_smoking <- merge(cancer, smoking, by = "location")
 cancer_smoking$is_county <- NULL
 cancer_smoking_sf <- merge(county_sf, cancer_smoking,
                            by.x = "fips", by.y = "county_fips")
+cancer_smoking_sf <- merge(cancer_smoking_sf, predictors,
+                           by.x = "fips", by.y = "County_FIPS")
 cancer_smoking <- st_drop_geometry(cancer_smoking_sf)
+# check number of counties with missing data
+lapply(cancer_smoking, function(x) sum(is.na(x)))
 smoking[, county_name := str_match(county, "^(.+)\\s(County|City|Parish)")[,2]]
 has_data_sf <- cbind(has_data = county_sf$fips %in% cancer_smoking_sf$fips, county_sf)
 # plot(has_data_sf[, "has_data"], main = "Lung Cancer Mortality and Smoking Data Coverage")
