@@ -26,7 +26,8 @@ Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2_flatbeta_MCMC.cpp"))
 
 X <- with(cancer_smoking_sf, {
   cbind(1, total_mean_smoking,
-        unemployed_2014, SVI_2014, physical_inactivity_2014, uninsured_2012_2016)
+        unemployed_2014, SVI_2014, physical_inactivity_2014, uninsured_2012_2016,
+        diabetes_2014, obesity_2014)
 })
 y <- cancer_smoking_sf$mortality2014
 # Test for spatial autocorrelation
@@ -281,23 +282,26 @@ params_summary <- apply(params_sim, MARGIN = 2, function(x) {
 round_digits <- 3
 params_summary[, `:=`(
   Parameter = c("$\\beta_0$", "$\\beta_1$", "$\\beta_2$", "$\\beta_3$",
-                "$\\beta_4$", "$\\beta_5$", "$\\sigma^2$", "$\\rho$"),
+                "$\\beta_4$", "$\\beta_5$", "$\\beta_6$", "$\\beta_7$",
+                "$\\sigma^2$", "$\\rho$"),
   Description = c("Intercept",
                   "Smoking prevalence",
                   "Unemployment Percentile",
                   "SVI Percentile",
                   "Physically Inactive (\\%)",
                   "Uninsured (\\%)",
+                  "Diabetes Prevalence (\\%)",
+                  "Obesity Prevalence (\\%)",
                   "Total variance",
                   "Spatial proportion of variance"),
-  `Mean` = round(mean, digits = round_digits),
+  `Posterior Mean` = round(mean, digits = round_digits),
   `95\\% Credible Interval` = paste0("(", round(lower, digits = round_digits), ", ",
                     round(upper, digits = round_digits), ")")
 )]
-params_summary <- params_summary[, .(Parameter, Description, `Mean`, `95\\% Credible Interval`)]
+params_summary <- params_summary[, .(Parameter, Description, `Posterior Mean`, `95\\% Credible Interval`)]
 rownames(params_summary) <- NULL
 print(xtable(params_summary, type = "latex",
-             caption = "Posterior summaries of non-spatial effect parameters.",
+             caption = "Posterior summaries of non-spatial effect parameters in analysis of US county-level lung cancer mortality rates.",
              label = "tab:RDA_post_summaries", align = c("c", "c", "c", "c", "c")),
       type = "latex", sanitize.text.function = function(x) {x},
       include.rownames = FALSE,

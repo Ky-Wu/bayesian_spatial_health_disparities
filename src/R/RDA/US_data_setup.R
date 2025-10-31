@@ -15,9 +15,15 @@ inactivity_uninsured <- fread(file.path(getwd(), "data", "DiabetesAtlasData_inac
 inactivity_uninsured <- inactivity_uninsured[, .(County_FIPS,
                                                  physical_inactivity_2014 = `Physical Inactivity-2014-Percentage`,
                                                  uninsured_2012_2016 = `No Health Insurance-2012-2016-Percentage`)]
+diabetes <- fread(file.path(getwd(), "data", "DiabetesAtlasData_diabetes_2014.csv"))
+diabetes <- diabetes[, .(County_FIPS, diabetes_2014 = `Diagnosed Diabetes-2014-Percentage`)]
+obesity <- fread(file.path(getwd(), "data", "DiabetesAtlasData_obesity_2014.csv"))
+obesity <- obesity[, .(County_FIPS, obesity_2014 = `Obesity-2014-Percentage`)]
+
 predictors <- unemployment[SVI, on = .(County_FIPS)][inactivity_uninsured, on = .(County_FIPS)]
+predictors <- predictors[diabetes, on = .(County_FIPS)][obesity, on = .(County_FIPS)]
 predictors[] <- lapply(predictors, function(x) ifelse(x == "No Data", NA, x))
-target_cols <- colnames(predictors)[4:7]
+target_cols <- colnames(predictors)[4:9]
 predictors[, target_cols[] := lapply(.SD, as.numeric), .SDcols = target_cols]
 
 # Import US counties
