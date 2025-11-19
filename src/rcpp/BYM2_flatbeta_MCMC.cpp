@@ -95,13 +95,10 @@ public:
       throw std::runtime_error("allowed rho prior types: 'pc', 'truncig'");
     }
     rho_prior_type = rho_prior_type_;
-    a_rho = a_rho_;
-    b_rho = b_rho_;
-    lambda_rho = lambda_rho_;
     lower_rho = lower_rho_;
     upper_rho = upper_rho_;
     astar_sigma = a_sigma + (double) N / 2.0;
-    astar_rho = a_sigma + (double) N / 2.0;
+    astar_rho = a_rho + (double) N / 2.0 - 1.0;
   }
 
   void initOLS() {
@@ -319,7 +316,7 @@ public:
     if (rho_prior_type == "pc") {
       out -= rhoPCPriorlogd(rho);
     } else {
-      out -= (a_rho + 1) * log(1 - rho) + 1 / (b_rho * (1 - rho));
+      out -= (a_rho + 1) * log(1 - rho) + b_rho / (1 - rho);
     }
     return out;
   }
