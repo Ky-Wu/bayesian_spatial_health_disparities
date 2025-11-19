@@ -31,11 +31,11 @@ for (sim_i in seq(current_i, n_sim)) {
   lisa_colors_rook <- lisa_colors(lisa_rook)
   lisa_labels_rook <- lisa_labels(lisa_rook)
   lisa_clusters_rook <- lisa_clusters(lisa_rook, cutoff = max(c(0, pvals[pvals_adj <= 0.15])))
-  plot(st_geometry(county_sf),
-       col=sapply(lisa_clusters_rook, function(x){return(lisa_colors_rook[[x+1]])}),
-       border = "#333333", lwd=0.2)
-  title(main = "LISA (Rook)")
-  legend('bottomleft', legend = lisa_labels_rook, fill = lisa_colors_rook, border = "#eeeeee")
+  # plot(st_geometry(county_sf),
+  #      col=sapply(lisa_clusters_rook, function(x){return(lisa_colors_rook[[x+1]])}),
+  #      border = "#333333", lwd=0.2)
+  # title(main = "LISA (Rook)")
+  # legend('bottomleft', legend = lisa_labels_rook, fill = lisa_colors_rook, border = "#eeeeee")
   region_labels <- vapply(lisa_clusters_rook,
                           function(x) lisa_labels_rook[x + 1],
                           character(1))

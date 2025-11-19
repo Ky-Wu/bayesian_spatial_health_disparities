@@ -24,8 +24,8 @@ Rcpp::sourceCpp(file.path(getwd(), "src", "rcpp", "BYM2_flatbeta_MCMC.cpp"))
 source(file.path(getwd(), "src", "R", "simulation", "CA_sharp_boundary_sim_setup.R"))
 N <- nrow(W)
 # Priors
-a_sigma <- 0.1
-b_sigma <- 0.1
+a_sigma <- 0.001
+b_sigma <- 0.001
 # PC prior, ignore IG prior parameters
 a_rho <- 0.0
 b_rho <- 0.0
@@ -33,18 +33,11 @@ b_rho <- 0.0
 lower_rho <- 0
 upper_rho <- 0.99
 # PC prior: pi(rho) = lambda * exp(-lambda * d(rho)), d(rho) = sqrt(2 * KLD(rho))
-lambda_rho <- .2
-
-T_edge = seq(50, 100, by = 5)
-n_sim <- 50
+lambda_rho <- 0.2
+n_sim <- 100
 all_vij_df <- data.table()
-indx <- seq_len(N)
-current_i <- 1
-if(file.exists(file.path(outputdir, "all_vij_df.csv"))) {
-  all_vij_df <- fread(file.path(outputdir, "all_vij_df.csv"))
-  current_i <- max(all_vij_df$sim_i) + 1
-}
-for (sim_i in seq(current_i, n_sim)) {
+
+for (sim_i in seq_len(n_sim)) {
   print(paste0("Running simulation ", sim_i, "/", n_sim, "..."))
   set.seed(sim_i)
   source(file.path(getwd(), "src", "R", "simulation", "CA_sharp_boundary_sim_data.R"))
@@ -75,48 +68,56 @@ for (sim_i in seq(current_i, n_sim)) {
     optim_e <- eps_optim$par
     optim_e_vij <- ComputeSimVij(phi_diffs, epsilon = optim_e)
   })
+  # correct results
+  oFile <- paste0("sim_", sim_i, ".csv")
+  all_vij_df <- fread(file.path(outputdir, "sim_results", oFile))
+  all_vij_df$e_vij <- as.vector(optim_e_vij)
+  all_vij_df$analysis_time <- our_time["elapsed"]
 
   # compute ARDP-DAGAR difference probabilities
-  ARDP_time <- system.time({
-    model.data1 <- list(k = n_county,  I = diag(ncol(X)),
-                        X = X, Y = y,
-                        Ik = diag(nrow(X)), index1 = index1,
-                        alpha = 1, ncolumn = ncol(X), H = 15, ns = dni,
-                        udnei = udnei, cn = c(0, cni))
-    model.inits <- rep(list(list(rho1 = 0.1, tau1 = 1, taue1 = 5,
-                                 taus = 1 / 5, beta = rep(0, ncol(X)))), 4)
-    model.param <- c("beta", "rho1", "tau1", "vare1", "taus", "phi", "u")
-    run.DAGAR1 <- jags(model.data1, model.inits, model.param,
-                       file.path(outputdir, "DAGAR_ARDP.txt"),
-                       n.chains = 2,
-                       n.iter = 60000,
-                       n.burnin = 20000,
-                       n.thin = 1)
-    name <- paste0("sim", sim_i, "DAGAR_ARDP_samps.RData")
-    save(run.DAGAR1, file = file.path(outputdir, "ARDP_DAGAR_samps", name))
-    gammas <-  run.DAGAR1$BUGSoutput$sims.matrix[,4:61]
-    #county_sf$ARDP_gamma_pmeans <- apply(gammas, 2, mean)
-    #plot(county_sf)
-    # estimate difference boundaries
-    vij_samples <- vapply(seq_len(nrow(ij_list)), function(pair_indx) {
-      i <- ij_list[pair_indx,]$i
-      j <- ij_list[pair_indx,]$j
-      gammas[,i] != gammas[,j]
-    }, numeric(nrow(gammas)))
-    ARDP_vij <- apply(vij_samples, 2, mean)
-  })
+  # ARDP_time <- system.time({
+  #   model.data1 <- list(k = n_county,  I = diag(ncol(X)),
+  #                       X = X, Y = y,
+  #                       Ik = diag(nrow(X)), index1 = index1,
+  #                       alpha = 1, ncolumn = ncol(X), H = 15, ns = dni,
+  #                       udnei = udnei, cn = c(0, cni))
+  #   model.inits <- rep(list(list(rho1 = 0.1, tau1 = 1, taue1 = 5,
+  #                                taus = 1 / 5, beta = rep(0, ncol(X)))), 2)
+  #   model.param <- c("beta", "rho1", "tau1", "vare1", "taus", "phi", "u")
+  #   run.DAGAR1 <- jags(model.data1, model.inits, model.param,
+  #                      file.path(outputdir, "DAGAR_ARDP.txt"),
+  #                      n.chains = 2,
+  #                      n.iter = 60000,
+  #                      n.burnin = 20000,
+  #                      n.thin = 1)
+  #   name <- paste0("sim", sim_i, "DAGAR_ARDP_samps.RData")
+  #   save(run.DAGAR1, file = file.path(outputdir, "ARDP_DAGAR_samps", name))
+  #   gammas <-  run.DAGAR1$BUGSoutput$sims.matrix[,4:61]
+  #   #county_sf$ARDP_gamma_pmeans <- apply(gammas, 2, mean)
+  #   #plot(county_sf)
+  #   # estimate difference boundaries
+  #   vij_samples <- vapply(seq_len(nrow(ij_list)), function(pair_indx) {
+  #     i <- ij_list[pair_indx,]$i
+  #     j <- ij_list[pair_indx,]$j
+  #     gammas[,i] != gammas[,j]
+  #   }, numeric(nrow(gammas)))
+  #   ARDP_vij <- apply(vij_samples, 2, mean)
+  # })
+  #
+  # all_vij_df <- rbind(all_vij_df, data.table(
+  #   sim_i = sim_i,
+  #   pair_indx = seq_len(nrow(ij_list)),
+  #   true_diff = true_diff,
+  #   e_vij = as.vector(optim_e_vij),
+  #   ARDP_vij = ARDP_vij,
+  #   analysis_time = our_time["elapsed"],
+  #   ARDP_time = ARDP_time["elapsed"]
+  # ))
+  # colnames(all_vij_df) <- c("sim_i", "pair_indx", "true_diff", "e_vij", "ARDP_vij",
+  #                           "analysis_time", "ARDP_time")
+  # oFile <- "all_vij_df.csv"
+  # fwrite(all_vij_df, file.path(outputdir, "sim_results", oFile))
 
-  all_vij_df <- rbind(all_vij_df, data.table(
-    sim_i = sim_i,
-    pair_indx = seq_len(nrow(ij_list)),
-    true_diff = true_diff,
-    e_vij = as.vector(optim_e_vij),
-    ARDP_vij = ARDP_vij,
-    analysis_time = our_time["elapsed"],
-    ARDP_time = ARDP_time["elapsed"]
-  ))
-  colnames(all_vij_df) <- c("sim_i", "pair_indx", "true_diff", "e_vij", "ARDP_vij",
-                            "analysis_time", "ARDP_time")
-  fwrite(all_vij_df, file.path(outputdir, "all_vij_df.csv"))
+  fwrite(all_vij_df, file.path(outputdir, "sim_results", oFile))
 }
 
