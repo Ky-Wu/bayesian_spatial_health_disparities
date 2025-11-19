@@ -62,3 +62,70 @@ rownames(ij_list) <- NULL
 county_sf <- st_as_sf(county_sp)
 rownames(county_sf) <- NULL
 st_crs(county_sf) <- st_crs(st_as_sf(county_poly))
+
+
+# ARDP-DAGAR setup
+
+## Adjacency matrix
+county.nbs = poly2nb(county_sp)
+n=length(county.nbs)
+county.coords <- coordinates(county_sp)
+Adj=sapply(county.nbs,function(x,n) {v=rep(0,n);v[x]=1;v},n)
+#colnames(Adj)=county_id
+
+num_edge <- sum(Adj)/2
+
+## Reorder the map
+ca.latrange=round(quantile(county.coords[,2],c(0.25,0.75)))
+ca.albersproj=mapproject(county.coords[,1],county.coords[,2],projection = "albers",param=ca.latrange)
+
+perm=order(ca.albersproj$x-ca.albersproj$y)
+colnames(Adj)[perm]
+
+Adj_new=Adj[perm,perm]
+
+n=nrow(Adj_new)
+ni=rowSums(Adj_new)
+maxn=max(ni)
+neimat=matrix(0,n,maxn)
+neighbors=lapply(1:n,function(x) which(Adj_new[x,]==1))
+#N(i): 2:n
+dneighbors=sapply(2:n,function(i) intersect(neighbors[[i]],1:(i-1)))
+#n<i: 2:n
+dni=sapply(dneighbors,length)
+original_perm = 1:n
+index2=c(1,which(dni==0)+1)
+
+final_perm=c(original_perm[perm][index2],
+             original_perm[perm][-index2])
+final_perm[order(final_perm)]
+
+Minc = Adj[final_perm,final_perm]
+n=nrow(Minc)
+ni=rowSums(Minc)
+maxn=max(ni)
+neimat=matrix(0,n,maxn)
+neighbors=lapply(1:n,function(x) which(Minc[x,]==1))
+#N(i): 2:n
+dneighbors=sapply(2:n,function(i) intersect(neighbors[[i]],1:(i-1)))
+#n<i: 2:n
+
+dni=sapply(dneighbors,length)
+nmax=max(dni)
+cni=cumsum(dni)
+dneimat=sapply(dneighbors, function(nei,nmax,n) c(nei,rep(n+1,nmax+1-length(nei))),nmax,n)
+udnei=unlist(dneighbors)
+
+ni_wo = sapply(neighbors,length)
+cni_wo = cumsum(ni_wo)
+udnei_wo = unlist(neighbors)
+cn = c(0, cni)
+ns = dni
+
+region = seq(1:n)
+index = list()
+for(i in 1:(n-2)){
+  index[[i]] = region[-(udnei[(cn[i+1] + 1):(cn[i+1] + ns[i+1])])]
+}
+index1 = unlist(index)
+mns = max(dni) + 1

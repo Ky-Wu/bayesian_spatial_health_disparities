@@ -12,6 +12,7 @@ set.seed(122)
 
 # Import US counties
 ca.county = map("county","california", fill=TRUE, plot=FALSE)
+#ca.county <- map("county", fill = TRUE, plot = FALSE)
 county.ID <- sapply(strsplit(ca.county$names, ","), function(x) x[2])
 ca.poly = map2SpatialPolygons(ca.county, IDs=county.ID)
 ca.coords = coordinates(ca.poly)
@@ -44,7 +45,7 @@ neighbors=lapply(1:n,function(x) which(Adj_new[x,]==1))
 dneighbors=sapply(2:n,function(i) intersect(neighbors[[i]],1:(i-1)))
 #n<i: 2:n
 dni=sapply(dneighbors,length)
-original_perm = 1:58
+original_perm = 1:n
 index2=c(1,which(dni==0)+1)
 
 final_perm=c(original_perm[perm][index2],
