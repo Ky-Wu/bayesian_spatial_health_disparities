@@ -43,8 +43,8 @@ computeTrueFDR <- function(d, true_diff) {
   sum(d & !true_diff) / sum(d)
 }
 all_res <- merge(all_vij_df, LISA_results, by = c("sim_i", "pair_indx"))
-decisions <- all_res[, .(e_decisions = computeDecisions(e_vij, delta = 0.15),
-                            ARDP_decisions = computeDecisions(ARDP_vij, delta = 0.15),
+decisions <- all_res[, .(e_decisions = computeDecisions(e_vij, delta = 0.3),
+                            ARDP_decisions = computeDecisions(ARDP_vij, delta = 0.3),
                             LISA_diff_boundary = LISA_diff_boundary,
                             true_diff = true_diff),
                         keyby = .(sim_i)]
@@ -126,7 +126,7 @@ ARDP_roc <- pROC::roc(sample(c(0, 1), k, replace = T), runif(k))
 ARDP_roc$sensitivities[1:k] <- rev(roc_df[Method == "ARDP-DAGAR",]$sensitivity)
 ARDP_roc$specificities[1:k] <- rev(roc_df[Method == "ARDP-DAGAR",]$specificity)
 ARDP_roc$auc <- auc(ARDP_roc)
-#roc.test(e_roc, ARDP_roc)
+roc.test(e_roc, ARDP_roc)
 
 diff_prob <- melt(all_vij_df, measure.vars = c("e_vij", "ARDP_vij"))
 diff_prob[, variable := ifelse(variable == "e_vij", "epsilon-difference", "ARDP-DAGAR")]
@@ -183,8 +183,8 @@ max_vijs <- all_vij_df[, .(ARDP_max = max(ARDP_vij), e_max = max(e_vij)),
 mean(max_vijs$ARDP_max <= 0.75)
 mean(max_vijs$e_max <= 0.75)
 all_res <- merge(all_vij_df, LISA_results, by = c("sim_i", "pair_indx"))
-decisions <- all_res[, .(e_decisions = computeDecisions(e_vij, delta = 0.15),
-                         ARDP_decisions = computeDecisions(ARDP_vij, delta = 0.15),
+decisions <- all_res[, .(e_decisions = computeDecisions(e_vij, delta = 0.3),
+                         ARDP_decisions = computeDecisions(ARDP_vij, delta = 0.3),
                          LISA_diff_boundary = LISA_diff_boundary,
                          true_diff = true_diff),
                      keyby = .(sim_i)]
@@ -198,6 +198,9 @@ n_decisions <- decisions[, .(e_boundaries = sum(e_decisions),
                          keyby = .(sim_i)]
 lapply(n_decisions[,2:4], mean)
 lapply(n_decisions[,2:4], sd)
+sum(n_decisions$ARDP_boundaries == 0)
+sum(n_decisions$e_boundaries == 0)
+sum(n_decisions$LISA_boundaries == 0)
 
 for(target_t in T_edge) {
   new_row <- all_vij_df[, .(
